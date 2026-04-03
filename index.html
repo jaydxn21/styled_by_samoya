@@ -1355,7 +1355,7 @@
       return;
     }
     try {
-      await emailjs.send(cfg.serviceId, cfg.templateId, {
+    await emailjs.send(cfg.serviceId, cfg.templateId, {
         to_email:    cfg.ownerEmail,
         ref:         booking.ref,
         client_name: booking.clientName,
@@ -1372,18 +1372,18 @@
 
       // NEW - confirms booking to customer
     await emailjs.send(cfg.serviceId, 'template_m2txghh', {
-      to_email:    booking.email,
-      ref:         booking.ref,
-      client_name: booking.clientName,
-      email:       cfg.ownerEmail,  // Owner's email in "from" field
-      service:     booking.service,
-    // price:       booking.price,
-    date:        booking.date,
-    time:        booking.time,
-    hair_length: booking.hairLength,
-    house_call:  booking.houseCall,
-    notes:       booking.notes
-    });
+        to_email:    booking.email,      // customer receives it
+        ref:         booking.ref,
+        client_name: booking.clientName,
+        email:       booking.email,      // customer's email (for template variables)
+        service:     booking.service,
+        date:        booking.date,
+        time:        booking.time,
+        hair_length: booking.hairLength,
+        house_call:  booking.houseCall,
+        notes:       booking.notes
+      });
+
       setNotifyStatus('email', 'success', 'Email sent to Samoya ✓');
     } catch (err) {
       setNotifyStatus('email', 'error', 'Email failed — check EmailJS config');
