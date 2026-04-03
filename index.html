@@ -905,7 +905,7 @@
         <div class="service-name">Cornrow Braid</div>
         <div class="service-desc">Classic cornrows in any pattern. Price based on length and style.</div>
       </div>
-      <div class="service-card" data-service="Locs" data-price="Starts at $7,500">
+      <div class="service-card" data-service="Locs">
         <div class="service-check"></div>
         <div class="service-icon">🌿</div>
         <div class="service-name">Locs</div>
@@ -923,7 +923,7 @@
         <div class="service-name">Multicolor</div>
         <div class="service-desc">Bold, vibrant color additions to any style.</div>
       </div>
-      <div class="service-card" data-service="Male Hair" data-price="Starts at $2,000">
+      <div class="service-card" data-service="Male Hair">
         <div class="service-check"></div>
         <div class="service-icon">💈</div>
         <div class="service-name">Male Hair</div>
@@ -1327,7 +1327,7 @@
       phone,
       email,
       service: state.service,
-      price: state.servicePrice ? 'J$' + state.servicePrice : '—',
+    //   price: state.servicePrice ? 'J$' + state.servicePrice : '—',
       date: dateLabel,
       time: state.selectedTime,
       hairLength: length || '—',
@@ -1362,7 +1362,7 @@
         phone:       booking.phone,
         email:       booking.email,
         service:     booking.service,
-        price:       booking.price,
+        // price:       booking.price,
         date:        booking.date,
         time:        booking.time,
         hair_length: booking.hairLength,
