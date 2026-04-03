@@ -1291,8 +1291,8 @@
     const length = document.getElementById('hairLength').value;
     const notes = document.getElementById('notes').value.trim();
     document.getElementById('sum-service').textContent = state.service || '—';
-    document.getElementById('sum-price').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
-    document.getElementById('sum-price-big').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
+    // document.getElementById('sum-price').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
+    // document.getElementById('sum-price-big').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
     if (state.selectedDate) {
       const d = new Date(state.selectedDate + 'T00:00:00');
       document.getElementById('sum-date').textContent = d.toLocaleDateString('en-JM', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
