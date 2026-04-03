@@ -867,16 +867,6 @@
     <p class="section-sub" style="margin: 0 auto;">Choose your service, pick a date and time that works for you, and we'll take care of the rest.</p>
   </div>
 
-  <!-- ⚙️ OWNER SETUP BANNER (remove after configuring) -->
-  <div class="setup-banner" id="setupBanner">
-    <strong>⚙️ One-Time Setup — Fill in your EmailJS credentials, then delete this banner</strong>
-    1. Sign up free at <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> (200 emails/month, no backend needed)<br>
-    2. Connect your Gmail or email account → copy the <code>Service ID</code><br>
-    3. Create an email template using variables like <code>{{client_name}}</code>, <code>{{service}}</code>, <code>{{date}}</code>, <code>{{time}}</code>, <code>{{phone}}</code>, <code>{{notes}}</code> → copy the <code>Template ID</code><br>
-    4. Copy your <code>Public Key</code> from Account → API Keys<br>
-    5. Paste all four values into <code>OWNER_CONFIG</code> at the top of the &lt;script&gt; tag
-  </div>
-
   <!-- Progress -->
   <div class="step-progress" id="stepProgress">
     <div class="step-item active" data-step="1">
@@ -1152,8 +1142,8 @@
     emailjs: {
       publicKey:  'WhFkp6kOSjf5xoeTP',  // From emailjs.com → Account → API Keys
       serviceId:  'service_64ydreb',           // From emailjs.com → Email Services
-      templateId: 'YOUR_TEMPLATE_ID',          // From emailjs.com → Email Templates
-      ownerEmail: 'samoya@example.com'         // The email address to receive bookings
+      templateId: 'template_hvnh11q',          // From emailjs.com → Email Templates
+      ownerEmail: 'crownedsamoya@gmail.com'         // The email address to receive bookings
     }
   };
   // =====================================================================
