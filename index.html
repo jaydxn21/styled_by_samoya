@@ -6,6 +6,7 @@
 <title>Crowned by Samoya — Book Your Appointment</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Dancing+Script:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <style>
   :root {
     --hot-pink: #e8006a;
@@ -810,6 +811,32 @@
     .time-grid { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
+<!-- Firebase CDN -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAHtBCm6tUNye5OLd44FUBWrZuqflwecz8",
+    authDomain: "crownedbysamoya.firebaseapp.com",
+    projectId: "crownedbysamoya",
+    storageBucket: "crownedbysamoya.firebasestorage.app",
+    messagingSenderId: "734938479006",
+    appId: "1:734938479006:web:a8f09bd9e0d2dc40ac7e8f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Make db available globally
+  window.db = db;
+  window.fsCollection = collection;
+  window.fsAddDoc = addDoc;
+  window.fsQuery = query;
+  window.fsWhere = where;
+  window.fsGetDocs = getDocs;
+</script>
+
 </head>
 <body>
 
@@ -1355,6 +1382,24 @@
       return;
     }
     try {
+        // 1. SAVE TO FIRESTORE AS PENDING
+      const docRef = await window.fsAddDoc(window.fsCollection(window.db, 'bookings'), {
+        ref:          booking.ref,
+        clientName:   booking.clientName,
+        phone:        booking.phone,
+        email:        booking.email,
+        service:      booking.service,
+        date:         booking.date,
+        time:         booking.time,
+        hairLength:   booking.hairLength,
+        houseCall:    booking.houseCall,
+        notes:        booking.notes,
+        status:       'pending',
+        createdAt:    new Date().toISOString()
+      });
+
+      console.log('Booking saved to Firestore with ID:', docRef.id);
+
     await emailjs.send(cfg.serviceId, cfg.templateId, {
         to_email:    cfg.ownerEmail,
         ref:         booking.ref,
