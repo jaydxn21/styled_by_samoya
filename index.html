@@ -1402,6 +1402,7 @@
 
     await emailjs.send(cfg.serviceId, cfg.templateId, {
         to_email:    cfg.ownerEmail,
+        booking_id:  docRef.id,           // Firestore document ID for reference
         ref:         booking.ref,
         client_name: booking.clientName,
         phone:       booking.phone,
@@ -1416,18 +1417,18 @@
       });
 
       // NEW - confirms booking to customer
-    await emailjs.send(cfg.serviceId, 'template_m2txghh', {
-        to_email:    booking.email,      // customer receives it
-        ref:         booking.ref,
-        client_name: booking.clientName,
-        email:       booking.email,      // customer's email (for template variables)
-        service:     booking.service,
-        date:        booking.date,
-        time:        booking.time,
-        hair_length: booking.hairLength,
-        house_call:  booking.houseCall,
-        notes:       booking.notes
-      });
+    // await emailjs.send(cfg.serviceId, 'template_m2txghh', {
+    //     to_email:    booking.email,      // customer receives it
+    //     ref:         booking.ref,
+    //     client_name: booking.clientName,
+    //     email:       booking.email,      // customer's email (for template variables)
+    //     service:     booking.service,
+    //     date:        booking.date,
+    //     time:        booking.time,
+    //     hair_length: booking.hairLength,
+    //     house_call:  booking.houseCall,
+    //     notes:       booking.notes
+    //   });
 
       setNotifyStatus('email', 'success', 'Email sent to Samoya ✓');
     } catch (err) {

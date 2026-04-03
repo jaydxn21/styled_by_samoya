@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Action</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 90%;
+    }
+    .icon { font-size: 60px; margin-bottom: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    p { color: #666; }
+    .loading { color: #999; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon" id="icon">⏳</div>
+  <h1 id="title">Processing...</h1>
+  <p id="message" class="loading">Please wait</p>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAHtBCm6tUNye5OLd44FUBWrZuqflwecz8",
+    authDomain: "crownedbysamoya.firebaseapp.com",
+    projectId: "crownedbysamoya",
+    storageBucket: "crownedbysamoya.firebasestorage.app",
+    messagingSenderId: "734938479006",
+    appId: "1:734938479006:web:a8f09bd9e0d2dc40ac7e8f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Get URL params
+  const params = new URLSearchParams(window.location.search);
+  const bookingId = params.get('id');
+  const action = params.get('action');
+
+  const icon = document.getElementById('icon');
+  const title = document.getElementById('title');
+  const message = document.getElementById('message');
+
+  async function processAction() {
+    if (!bookingId || !action) {
+      icon.textContent = '❌';
+      title.textContent = 'Invalid Link';
+      message.textContent = 'This link is missing required information.';
+      return;
+    }
+
+    try {
+      const bookingRef = doc(db, 'bookings', bookingId);
+      const bookingSnap = await getDoc(bookingRef);
+
+      if (!bookingSnap.exists()) {
+        icon.textContent = '❌';
+        title.textContent = 'Booking Not Found';
+        message.textContent = 'This booking no longer exists.';
+        return;
+      }
+
+      const booking = bookingSnap.data();
+
+      // Check if already actioned
+      if (booking.status !== 'pending') {
+        icon.textContent = 'ℹ️';
+        title.textContent = 'Already Processed';
+        message.textContent = `This booking was already ${booking.status}.`;
+        return;
+      }
+
+      if (action === 'accept') {
+        // Update Firestore status
+        await updateDoc(bookingRef, { status: 'accepted' });
+
+        // Send confirmation email to customer via EmailJS
+        await emailjs.send('service_tbvgs6i', 'template_m2txghh', {
+    to_email:       booking.email,
+    ref:            booking.ref,
+    client_name:    booking.clientName,
+    email:          booking.email,
+    service:        booking.service,
+    date:           booking.date,
+    time:           booking.time,
+    hair_length:    booking.hairLength,
+    house_call:     booking.houseCall,
+    notes:          booking.notes,
+    status_message: '✅ Great news! Your appointment has been confirmed. We look forward to seeing you!'
+});
+
+      } else if (action === 'decline') {
+        // Update Firestore status
+        await updateDoc(bookingRef, { status: 'declined' });
+
+        // Send decline email to customer
+        await emailjs.send('service_tbvgs6i', 'template_m2txghh', {
+    to_email:       booking.email,
+    ref:            booking.ref,
+    client_name:    booking.clientName,
+    email:          booking.email,
+    service:        booking.service,
+    date:           booking.date,
+    time:           booking.time,
+    hair_length:    booking.hairLength,
+    house_call:     booking.houseCall,
+    notes:          booking.notes,
+    status_message: '❌ Unfortunately we are unable to accommodate your appointment at this time. Please feel free to book again for a different date or time.'
+});
+
+      }
+
+    } catch (err) {
+      console.error(err);
+      icon.textContent = '⚠️';
+      title.textContent = 'Something went wrong';
+      message.textContent = 'Please try again or contact support.';
+    }
+  }
+
+  // Load EmailJS then process
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+  script.onload = () => {
+    emailjs.init('WhFkp6kOSjf5xoeTP');
+    processAction();
+  };
+  document.head.appendChild(script);
+</script>
+</body>
+</html>
