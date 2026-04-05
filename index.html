@@ -1460,8 +1460,36 @@
   // --- 3. TELEGRAM Bot ---
   // (removed — email only)
 
+  async function isTimeSlotTaken(date, time) {
+    try {
+        const q = window.fsQuery(
+            window.fsCollection(window.db, 'bookings'),
+            window.fsWhere('date', '==', date),
+            window.fsWhere('time', '==', time),
+            window.fsWhere('status', '==', 'accepted')
+        );
+        const snapshot = await window.fsGetDocs(q);
+        return !snapshot.empty;
+    } catch (err) {
+        console.error('Error checking slot:', err);
+        return false;
+    }
+}
+
   // ===== CONFIRM BOOKING =====
   async function confirmBooking() {
+    // Check if slot is already taken
+    const dateLabel = state.selectedDate
+      ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+      : '—';
+
+    const taken = await isTimeSlotTaken(dateLabel, state.selectedTime);
+    if (taken) {
+        alert('Sorry, this time slot is no longer available. Please select a different time.');
+        goStep(2);
+        return;
+    }
+
     const ref = 'SBS-' + Math.floor(100000 + Math.random() * 900000);
     document.getElementById('bookingRef').textContent = ref;
 
