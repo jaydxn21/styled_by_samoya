@@ -1276,12 +1276,13 @@
         if (isToday) el.classList.add('today');
         const dateStr = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         if (state.selectedDate === dateStr) el.classList.add('selected');
-        el.addEventListener('click', () => {
-          state.selectedDate = dateStr;
-          state.selectedTime = null;
-          renderCalendar();
-          renderTimeSlots();
-        });
+        el.addEventListener('click', async () => {
+        state.selectedDate = dateStr;
+        state.selectedTime = null;
+        renderCalendar();
+        await renderTimeSlots();
+    });
+
       }
       grid.appendChild(el);
     }
@@ -1298,27 +1299,58 @@
   const allSlots = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
   const unavailableSlots = ['10:00 AM','1:00 PM','4:00 PM'];
 
-  function renderTimeSlots() {
+async function renderTimeSlots() {
     const grid = document.getElementById('timeGrid');
-    grid.innerHTML = '';
+    grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Loading times...</p>';
+
     if (!state.selectedDate) {
-      grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Select a date to see available times.</p>';
-      return;
+        grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Select a date to see available times.</p>';
+        return;
     }
-    allSlots.forEach(slot => {
-      const el = document.createElement('div');
-      const isUnavail = unavailableSlots.includes(slot);
-      el.className = 'time-slot' + (isUnavail ? ' unavailable' : '') + (state.selectedTime === slot ? ' selected' : '');
-      el.textContent = slot;
-      if (!isUnavail) {
-        el.addEventListener('click', () => {
-          state.selectedTime = slot;
-          renderTimeSlots();
+
+    // Fetch taken slots from Firestore for selected date
+    let takenSlots = [];
+    try {
+        const dateLabel = new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
-      }
-      grid.appendChild(el);
+        const q = window.fsQuery(
+            window.fsCollection(window.db, 'bookings'),
+            window.fsWhere('date', '==', dateLabel),
+            window.fsWhere('status', '==', 'accepted')
+        );
+        const snapshot = await window.fsGetDocs(q);
+        snapshot.forEach(doc => {
+            takenSlots.push(doc.data().time);
+        });
+    } catch (err) {
+        console.error('Error fetching taken slots:', err);
+    }
+
+    grid.innerHTML = '';
+    allSlots.forEach(slot => {
+        const el = document.createElement('div');
+        const isUnavail = unavailableSlots.includes(slot) || takenSlots.includes(slot);
+        const isTaken = takenSlots.includes(slot);
+
+        el.className = 'time-slot' + 
+            (isUnavail ? ' unavailable' : '') + 
+            (state.selectedTime === slot ? ' selected' : '');
+
+        // Show "Booked" label for Firebase taken slots
+        el.innerHTML = isTaken 
+            ? `${slot}<br><small style="font-size:0.65rem;opacity:0.7;">Booked</small>`
+            : slot;
+
+        if (!isUnavail) {
+            el.addEventListener('click', () => {
+                state.selectedTime = slot;
+                renderTimeSlots();
+            });
+        }
+        grid.appendChild(el);
     });
-  }
+}
 
   // ===== HOUSE CALL =====
   function toggleHouseCall() {
