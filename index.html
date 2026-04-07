@@ -1,837 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <!-- PWA -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Crowned">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crowned by Samoya — Book Your Appointment</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Dancing+Script:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-<style>
-  :root {
-    --hot-pink: #e8006a;
-    --blush: #f7c5d8;
-    --deep-pink: #c2005a;
-    --soft-pink: #fde8f0;
-    --cream: #fff9fb;
-    --gold: #c9a84c;
-    --dark: #1a0a10;
-    --text: #3d1a27;
-    --muted: #9e6b7d;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    overflow-x: hidden;
-  }
-
-  /* ===== HERO ===== */
-  .hero {
-    position: relative;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #1a0a10 0%, #3d0a23 40%, #7a0040 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 40px 20px;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(232,0,106,0.18) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 60% at 80% 30%, rgba(247,197,216,0.12) 0%, transparent 60%);
-  }
-
-  /* Butterfly decorations */
-  .butterfly {
-    position: absolute;
-    opacity: 0.15;
-    font-size: 4rem;
-    animation: flutter 6s ease-in-out infinite;
-  }
-  .butterfly:nth-child(1) { top: 8%; left: 5%; font-size: 2.5rem; animation-delay: 0s; }
-  .butterfly:nth-child(2) { top: 15%; right: 8%; font-size: 3.5rem; animation-delay: 1.5s; }
-  .butterfly:nth-child(3) { bottom: 20%; left: 10%; font-size: 2rem; animation-delay: 3s; }
-  .butterfly:nth-child(4) { bottom: 30%; right: 5%; font-size: 4rem; animation-delay: 2s; opacity: 0.1; }
-  .butterfly:nth-child(5) { top: 50%; left: 2%; font-size: 1.5rem; animation-delay: 4s; }
-
-  @keyframes flutter {
-    0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
-    25% { transform: translateY(-15px) rotate(5deg) scale(1.05); }
-    50% { transform: translateY(-8px) rotate(-3deg) scale(0.98); }
-    75% { transform: translateY(-20px) rotate(8deg) scale(1.03); }
-  }
-
-  .hero-inner {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    max-width: 700px;
-  }
-
-  .hero-tag {
-    display: inline-block;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--blush);
-    border: 1px solid rgba(247,197,216,0.3);
-    padding: 6px 20px;
-    border-radius: 30px;
-    margin-bottom: 30px;
-    backdrop-filter: blur(10px);
-    background: rgba(247,197,216,0.05);
-  }
-
-  .hero h1 {
-    font-family: 'Dancing Script', cursive;
-    font-size: clamp(3.5rem, 9vw, 7rem);
-    color: #fff;
-    line-height: 1.05;
-    margin-bottom: 8px;
-    text-shadow: 0 0 60px rgba(232,0,106,0.4);
-  }
-
-  .hero h1 span {
-    color: var(--blush);
-    display: block;
-    font-size: 0.55em;
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  .hero-sub {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    color: rgba(247,197,216,0.7);
-    margin-top: 16px;
-    margin-bottom: 40px;
-    letter-spacing: 0.05em;
-  }
-
-  .scroll-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--hot-pink);
-    color: #fff;
-    padding: 14px 34px;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 30px rgba(232,0,106,0.4);
-  }
-  .scroll-cta:hover {
-    background: var(--deep-pink);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 40px rgba(232,0,106,0.5);
-  }
-
-  /* Scroll indicator */
-  .scroll-hint {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(247,197,216,0.4);
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    animation: bobDown 2s ease-in-out infinite;
-  }
-  .scroll-hint::after {
-    content: '↓';
-    font-size: 1.2rem;
-  }
-  @keyframes bobDown {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(6px); }
-  }
-
-  /* ===== SERVICES STRIP ===== */
-  .services-strip {
-    background: var(--hot-pink);
-    padding: 18px 0;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .services-ticker {
-    display: inline-block;
-    animation: ticker 20s linear infinite;
-  }
-  .services-ticker span {
-    color: #fff;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    font-style: italic;
-    letter-spacing: 0.05em;
-    margin: 0 30px;
-  }
-  .services-ticker span::before { content: '✦  '; color: rgba(255,255,255,0.5); }
-  @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* ===== MAIN BOOKING SECTION ===== */
-  .booking-section {
-    padding: 80px 20px 100px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  .section-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--hot-pink);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .section-label::before, .section-label::after {
-    content: '';
-    height: 1px;
-    width: 40px;
-    background: var(--blush);
-  }
-
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2.2rem, 5vw, 3.5rem);
-    color: var(--dark);
-    line-height: 1.15;
-    margin-bottom: 10px;
-  }
-  .section-title em {
-    font-style: italic;
-    color: var(--hot-pink);
-  }
-
-  .section-sub {
-    color: var(--muted);
-    font-size: 0.95rem;
-    max-width: 480px;
-    line-height: 1.7;
-    margin-bottom: 50px;
-  }
-
-  /* ===== STEP PROGRESS ===== */
-  .step-progress {
-    display: flex;
-    align-items: center;
-    margin-bottom: 50px;
-    gap: 0;
-  }
-  .step-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-  }
-  .step-num {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border: 2px solid var(--blush);
-    color: var(--muted);
-    background: #fff;
-    transition: all 0.3s;
-    flex-shrink: 0;
-  }
-  .step-item.active .step-num, .step-item.done .step-num {
-    background: var(--hot-pink);
-    border-color: var(--hot-pink);
-    color: #fff;
-  }
-  .step-item.done .step-num::after { content: '✓'; }
-  .step-label {
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--muted);
-    white-space: nowrap;
-    transition: color 0.3s;
-  }
-  .step-item.active .step-label { color: var(--hot-pink); }
-  .step-connector {
-    flex: 1;
-    height: 2px;
-    background: var(--blush);
-    margin: 0 8px;
-    min-width: 20px;
-    transition: background 0.3s;
-  }
-  .step-connector.done { background: var(--hot-pink); }
-
-  /* ===== FORM PANELS ===== */
-  .form-panel {
-    display: none;
-    animation: fadeUp 0.4s ease;
-  }
-  .form-panel.active { display: block; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== SERVICE CARDS ===== */
-  .service-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
-    margin-bottom: 40px;
-  }
-
-  .service-card {
-    border: 2px solid var(--blush);
-    border-radius: 16px;
-    padding: 24px;
-    cursor: pointer;
-    background: #fff;
-    transition: all 0.25s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .service-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--soft-pink), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .service-card:hover::before, .service-card.selected::before { opacity: 1; }
-  .service-card:hover { border-color: var(--hot-pink); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(232,0,106,0.12); }
-  .service-card.selected { border-color: var(--hot-pink); box-shadow: 0 0 0 4px rgba(232,0,106,0.1); }
-
-  .service-check {
-    position: absolute;
-    top: 14px; right: 14px;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: var(--blush);
-    border: 2px solid var(--blush);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.65rem;
-    color: transparent;
-    transition: all 0.25s;
-  }
-  .service-card.selected .service-check {
-    background: var(--hot-pink);
-    border-color: var(--hot-pink);
-    color: #fff;
-  }
-  .service-check::after { content: '✓'; }
-
-  .service-icon { font-size: 1.8rem; margin-bottom: 12px; position: relative; }
-  .service-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 4px;
-    position: relative;
-  }
-  .service-desc {
-    font-size: 0.78rem;
-    color: var(--muted);
-    line-height: 1.5;
-    position: relative;
-    margin-bottom: 10px;
-  }
-  .service-price {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--hot-pink);
-    position: relative;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    letter-spacing: 0.03em;
-  }
-
-  /* ===== CALENDAR ===== */
-  .booking-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 40px;
-  }
-  @media (max-width: 680px) {
-    .booking-row { grid-template-columns: 1fr; }
-  }
-
-  .cal-box, .time-box {
-    background: #fff;
-    border: 2px solid var(--blush);
-    border-radius: 20px;
-    padding: 28px;
-  }
-
-  .cal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  .cal-month {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--dark);
-  }
-  .cal-nav {
-    background: var(--soft-pink);
-    border: none;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--hot-pink);
-    font-size: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
-  .cal-nav:hover { background: var(--hot-pink); color: #fff; }
-
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-  }
-  .cal-day-header {
-    text-align: center;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 6px 0;
-  }
-  .cal-day {
-    aspect-ratio: 1;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.82rem;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--text);
-    transition: all 0.2s;
-    border: 2px solid transparent;
-  }
-  .cal-day:hover:not(.empty):not(.past) { background: var(--soft-pink); border-color: var(--blush); }
-  .cal-day.selected { background: var(--hot-pink); color: #fff; }
-  .cal-day.today { border-color: var(--hot-pink); color: var(--hot-pink); font-weight: 700; }
-  .cal-day.past { color: #d0b0bc; cursor: default; }
-  .cal-day.empty { cursor: default; }
-
-  /* Time slots */
-  .time-label {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 18px;
-  }
-  .time-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-  .time-slot {
-    border: 2px solid var(--blush);
-    border-radius: 10px;
-    padding: 10px 6px;
-    text-align: center;
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--text);
-    background: #fff;
-    transition: all 0.2s;
-  }
-  .time-slot:hover { border-color: var(--hot-pink); background: var(--soft-pink); }
-  .time-slot.selected { background: var(--hot-pink); border-color: var(--hot-pink); color: #fff; }
-  .time-slot.unavailable { background: #f5f5f5; color: #ccc; border-color: #eee; cursor: not-allowed; }
-
-  /* ===== CONTACT FORM ===== */
-  .contact-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 40px;
-  }
-  @media (max-width: 680px) { .contact-grid { grid-template-columns: 1fr; } }
-
-  .field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-  .field-group.full { grid-column: 1 / -1; }
-
-  label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  input, select, textarea {
-    border: 2px solid var(--blush);
-    border-radius: 12px;
-    padding: 13px 16px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    color: var(--text);
-    background: #fff;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--hot-pink); }
-  textarea { resize: vertical; min-height: 100px; }
-  select { cursor: pointer; }
-
-  /* House call toggle */
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--soft-pink);
-    border: 2px solid var(--blush);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 30px;
-    cursor: pointer;
-  }
-  .toggle-switch {
-    width: 46px; height: 26px;
-    background: var(--blush);
-    border-radius: 13px;
-    position: relative;
-    transition: background 0.3s;
-    flex-shrink: 0;
-  }
-  .toggle-switch::after {
-    content: '';
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    transition: transform 0.3s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  }
-  .toggle-switch.on { background: var(--hot-pink); }
-  .toggle-switch.on::after { transform: translateX(20px); }
-  .toggle-text { font-size: 0.88rem; }
-  .toggle-text strong { display: block; color: var(--dark); font-weight: 600; }
-  .toggle-text small { color: var(--muted); font-size: 0.78rem; }
-
-  /* ===== SUMMARY BOX ===== */
-  .summary-card {
-    background: linear-gradient(135deg, #1a0a10, #3d0a23);
-    border-radius: 24px;
-    padding: 36px;
-    color: #fff;
-    margin-bottom: 30px;
-    position: relative;
-    overflow: hidden;
-  }
-  .summary-card::before {
-    content: '🦋';
-    position: absolute;
-    font-size: 8rem;
-    opacity: 0.04;
-    bottom: -20px; right: -20px;
-    line-height: 1;
-  }
-  .summary-brand {
-    font-family: 'Dancing Script', cursive;
-    font-size: 1.5rem;
-    color: var(--blush);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
-  }
-  @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; } }
-  .summary-item label {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    color: rgba(247,197,216,0.5);
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 4px;
-  }
-  .summary-item .val {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.05rem;
-    color: #fff;
-    font-weight: 400;
-  }
-  .summary-divider {
-    height: 1px;
-    background: rgba(247,197,216,0.15);
-    margin: 20px 0;
-  }
-  .summary-price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .summary-price-row .plabel {
-    font-size: 0.75rem;
-    color: rgba(247,197,216,0.6);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .summary-price-row .price {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem;
-    color: var(--blush);
-    font-style: italic;
-  }
-
-  /* ===== BUTTONS ===== */
-  .btn-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .btn-primary {
-    background: var(--hot-pink);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    padding: 15px 40px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 20px rgba(232,0,106,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .btn-primary:hover { background: var(--deep-pink); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,0,106,0.4); }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--muted);
-    border: 2px solid var(--blush);
-    border-radius: 50px;
-    padding: 13px 28px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-secondary:hover { border-color: var(--hot-pink); color: var(--hot-pink); }
-
-  /* ===== SUCCESS STATE ===== */
-  .success-panel {
-    display: none;
-    text-align: center;
-    padding: 60px 30px;
-    animation: fadeUp 0.5s ease;
-  }
-  .success-panel.show { display: block; }
-
-  .success-icon {
-    width: 90px; height: 90px;
-    border-radius: 50%;
-    background: var(--soft-pink);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 28px;
-    font-size: 2.5rem;
-    border: 3px solid var(--blush);
-  }
-  .success-panel h2 {
-    font-family: 'Dancing Script', cursive;
-    font-size: 2.8rem;
-    color: var(--hot-pink);
-    margin-bottom: 12px;
-  }
-  .success-panel p {
-    color: var(--muted);
-    max-width: 420px;
-    margin: 0 auto 30px;
-    line-height: 1.7;
-  }
-  .booking-ref {
-    display: inline-block;
-    background: var(--soft-pink);
-    border: 2px dashed var(--blush);
-    border-radius: 12px;
-    padding: 14px 30px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    color: var(--hot-pink);
-    letter-spacing: 0.2em;
-    margin-bottom: 30px;
-  }
-
-  /* ===== CONTACT BAR ===== */
-  .contact-bar {
-    background: var(--dark);
-    padding: 28px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 28px;
-  }
-  .contact-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: rgba(247,197,216,0.8);
-    font-size: 0.82rem;
-  }
-  .contact-item span:first-child { font-size: 1rem; }
-  .contact-item a { color: inherit; text-decoration: none; }
-  .contact-item a:hover { color: var(--blush); }
-
-  /* ===== FOOTER ===== */
-  footer {
-    background: #120608;
-    text-align: center;
-    padding: 20px;
-    color: rgba(247,197,216,0.25);
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-  }
-  footer span { color: var(--hot-pink); }
-
-  /* ===== NOTIFICATION STATUS ===== */
-  .notify-status {
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .notify-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #fff;
-    border: 2px solid var(--blush);
-    border-radius: 12px;
-    padding: 12px 18px;
-    font-size: 0.82rem;
-    color: var(--text);
-    transition: all 0.3s;
-  }
-  .notify-item.sending { border-color: var(--blush); color: var(--muted); }
-  .notify-item.success { border-color: #4caf50; background: #f0fff4; color: #2e7d32; }
-  .notify-item.error { border-color: #e57373; background: #fff5f5; color: #c62828; }
-  .notify-icon { font-size: 1.1rem; flex-shrink: 0; }
-  .notify-label { flex: 1; font-weight: 500; }
-  .notify-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--blush);
-    animation: pulse 1.2s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-  .notify-item.success .notify-dot { background: #4caf50; animation: none; }
-  .notify-item.error .notify-dot { background: #e57373; animation: none; }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  /* Setup banner */
-  .setup-banner {
-    background: linear-gradient(135deg, #fff8e1, #fff3cd);
-    border: 2px solid #ffc107;
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin-bottom: 30px;
-    font-size: 0.82rem;
-    color: #7b5e00;
-    line-height: 1.6;
-  }
-  .setup-banner strong { display: block; font-size: 0.9rem; margin-bottom: 6px; color: #5c4500; }
-  .setup-banner code {
-    background: rgba(0,0,0,0.08);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.8rem;
-  }
-  .setup-banner a { color: #e8006a; font-weight: 600; text-decoration: none; }
-  .setup-banner a:hover { text-decoration: underline; }
-  @media (max-width: 560px) {
-    .step-label { display: none; }
-    .service-grid { grid-template-columns: 1fr; }
-    .time-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-</style>
-<!-- Firebase CDN -->
+<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAHtBCm6tUNye5OLd44FUBWrZuqflwecz8",
@@ -843,240 +23,292 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
 
-  // Make db available globally
-  window.db = db;
-  window.fsCollection = collection;
-  window.fsAddDoc = addDoc;
-  window.fsQuery = query;
-  window.fsWhere = where;
-  window.fsGetDocs = getDocs;
+  window._db         = db;
+  window._collection = collection;
+  window._addDoc     = addDoc;
+  window._query      = query;
+  window._where      = where;
+  window._getDocs    = getDocs;
+  window._doc        = doc;
+  window._getDoc     = getDoc;
 </script>
 
+<style>
+  :root {
+    --hot-pink:#e8006a; --blush:#f7c5d8; --deep-pink:#c2005a;
+    --soft-pink:#fde8f0; --cream:#fff9fb; --gold:#c9a84c;
+    --dark:#1a0a10; --text:#3d1a27; --muted:#9e6b7d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;}
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;background:linear-gradient(135deg,#1a0a10 0%,#3d0a23 40%,#7a0040 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:40px 20px;}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 50%,rgba(232,0,106,0.18) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 80% 30%,rgba(247,197,216,0.12) 0%,transparent 60%);}
+  .butterfly{position:absolute;opacity:0.15;animation:flutter 6s ease-in-out infinite;}
+  .butterfly:nth-child(1){top:8%;left:5%;font-size:2.5rem;animation-delay:0s;}
+  .butterfly:nth-child(2){top:15%;right:8%;font-size:3.5rem;animation-delay:1.5s;}
+  .butterfly:nth-child(3){bottom:20%;left:10%;font-size:2rem;animation-delay:3s;}
+  .butterfly:nth-child(4){bottom:30%;right:5%;font-size:4rem;animation-delay:2s;opacity:0.1;}
+  .butterfly:nth-child(5){top:50%;left:2%;font-size:1.5rem;animation-delay:4s;}
+  @keyframes flutter{0%,100%{transform:translateY(0) rotate(-5deg) scale(1);}25%{transform:translateY(-15px) rotate(5deg) scale(1.05);}50%{transform:translateY(-8px) rotate(-3deg) scale(0.98);}75%{transform:translateY(-20px) rotate(8deg) scale(1.03);}}
+  .hero-inner{position:relative;z-index:2;text-align:center;max-width:700px;}
+  .hero-tag{display:inline-block;font-size:0.7rem;font-weight:500;letter-spacing:0.3em;text-transform:uppercase;color:var(--blush);border:1px solid rgba(247,197,216,0.3);padding:6px 20px;border-radius:30px;margin-bottom:30px;backdrop-filter:blur(10px);background:rgba(247,197,216,0.05);}
+  .hero h1{font-family:'Dancing Script',cursive;font-size:clamp(3.5rem,9vw,7rem);color:#fff;line-height:1.05;margin-bottom:8px;text-shadow:0 0 60px rgba(232,0,106,0.4);}
+  .hero h1 span{color:var(--blush);display:block;font-size:0.55em;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0.15em;text-transform:uppercase;}
+  .hero-sub{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(247,197,216,0.7);margin-top:16px;margin-bottom:40px;letter-spacing:0.05em;}
+  .scroll-cta{display:inline-flex;align-items:center;gap:10px;background:var(--hot-pink);color:#fff;padding:14px 34px;border-radius:50px;font-size:0.85rem;font-weight:500;letter-spacing:0.05em;cursor:pointer;border:none;transition:all 0.3s ease;box-shadow:0 4px 30px rgba(232,0,106,0.4);}
+  .scroll-cta:hover{background:var(--deep-pink);transform:translateY(-2px);box-shadow:0 8px 40px rgba(232,0,106,0.5);}
+  .scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:rgba(247,197,216,0.4);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:8px;animation:bobDown 2s ease-in-out infinite;}
+  .scroll-hint::after{content:'↓';font-size:1.2rem;}
+  @keyframes bobDown{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
+  /* TICKER */
+  .services-strip{background:var(--hot-pink);padding:18px 0;overflow:hidden;white-space:nowrap;}
+  .services-ticker{display:inline-block;animation:ticker 20s linear infinite;}
+  .services-ticker span{color:#fff;font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;letter-spacing:0.05em;margin:0 30px;}
+  .services-ticker span::before{content:'✦  ';color:rgba(255,255,255,0.5);}
+  @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+  /* BOOKING SECTION */
+  .booking-section{padding:80px 20px 100px;max-width:1100px;margin:0 auto;}
+  .section-label{font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--hot-pink);font-weight:500;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;}
+  .section-label::before,.section-label::after{content:'';height:1px;width:40px;background:var(--blush);}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.5rem);color:var(--dark);line-height:1.15;margin-bottom:10px;text-align:center;}
+  .section-title em{font-style:italic;color:var(--hot-pink);}
+  .section-sub{color:var(--muted);font-size:0.95rem;max-width:480px;line-height:1.7;margin:0 auto 50px;text-align:center;}
+
+  /* STEP PROGRESS */
+  .step-progress{display:flex;align-items:center;margin-bottom:50px;gap:0;}
+  .step-item{display:flex;align-items:center;gap:10px;}
+  .step-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;border:2px solid var(--blush);color:var(--muted);background:#fff;transition:all 0.3s;flex-shrink:0;}
+  .step-item.active .step-num,.step-item.done .step-num{background:var(--hot-pink);border-color:var(--hot-pink);color:#fff;}
+  .step-item.done .step-num::after{content:'✓';}
+  .step-label{font-size:0.78rem;font-weight:500;color:var(--muted);white-space:nowrap;transition:color 0.3s;}
+  .step-item.active .step-label{color:var(--hot-pink);}
+  .step-connector{flex:1;height:2px;background:var(--blush);margin:0 8px;min-width:20px;transition:background 0.3s;}
+  .step-connector.done{background:var(--hot-pink);}
+
+  /* PANELS */
+  .form-panel{display:none;animation:fadeUp 0.4s ease;}
+  .form-panel.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+  /* SERVICE CARDS */
+  .service-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-bottom:40px;}
+  .service-card{border:2px solid var(--blush);border-radius:16px;padding:24px;cursor:pointer;background:#fff;transition:all 0.25s ease;position:relative;overflow:hidden;}
+  .service-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--soft-pink),transparent);opacity:0;transition:opacity 0.3s;}
+  .service-card:hover::before,.service-card.selected::before{opacity:1;}
+  .service-card:hover{border-color:var(--hot-pink);transform:translateY(-3px);box-shadow:0 10px 30px rgba(232,0,106,0.12);}
+  .service-card.selected{border-color:var(--hot-pink);box-shadow:0 0 0 4px rgba(232,0,106,0.1);}
+  .service-check{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;background:var(--blush);border:2px solid var(--blush);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:transparent;transition:all 0.25s;}
+  .service-card.selected .service-check{background:var(--hot-pink);border-color:var(--hot-pink);color:#fff;}
+  .service-check::after{content:'✓';}
+  .service-icon{font-size:1.8rem;margin-bottom:12px;position:relative;}
+  .service-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--dark);margin-bottom:4px;position:relative;}
+  .service-desc{font-size:0.78rem;color:var(--muted);line-height:1.5;position:relative;margin-bottom:10px;}
+
+  /* CALENDAR */
+  .booking-row{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:40px;}
+  @media(max-width:680px){.booking-row{grid-template-columns:1fr;}}
+  .cal-box,.time-box{background:#fff;border:2px solid var(--blush);border-radius:20px;padding:28px;}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .cal-month{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--dark);}
+  .cal-nav{background:var(--soft-pink);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--hot-pink);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .cal-nav:hover{background:var(--hot-pink);color:#fff;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-day-header{text-align:center;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:6px 0;}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:0.82rem;border-radius:50%;cursor:pointer;color:var(--text);transition:all 0.2s;border:2px solid transparent;}
+  .cal-day:hover:not(.empty):not(.past):not(.blocked){background:var(--soft-pink);border-color:var(--blush);}
+  .cal-day.selected{background:var(--hot-pink);color:#fff;}
+  .cal-day.today{border-color:var(--hot-pink);color:var(--hot-pink);font-weight:700;}
+  .cal-day.past{color:#d0b0bc;cursor:default;}
+  .cal-day.empty{cursor:default;}
+  /* Blocked days from dashboard */
+  .cal-day.blocked{text-decoration:line-through;opacity:0.3;cursor:not-allowed;}
+
+  /* TIME SLOTS */
+  .time-label{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--dark);margin-bottom:18px;}
+  .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .time-slot{border:2px solid var(--blush);border-radius:10px;padding:10px 6px;text-align:center;font-size:0.78rem;font-weight:500;cursor:pointer;color:var(--text);background:#fff;transition:all 0.2s;}
+  .time-slot:hover{border-color:var(--hot-pink);background:var(--soft-pink);}
+  .time-slot.selected{background:var(--hot-pink);border-color:var(--hot-pink);color:#fff;}
+  .time-slot.unavailable{background:#f5f5f5;color:#ccc;border-color:#eee;cursor:not-allowed;}
+
+  /* FORM */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px;}
+  @media(max-width:680px){.contact-grid{grid-template-columns:1fr;}}
+  .field-group{display:flex;flex-direction:column;gap:7px;}
+  .field-group.full{grid-column:1/-1;}
+  label{font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+  input,select,textarea{border:2px solid var(--blush);border-radius:12px;padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:#fff;outline:none;transition:border-color 0.2s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--hot-pink);}
+  textarea{resize:vertical;min-height:100px;}
+  select{cursor:pointer;}
+  .toggle-row{display:flex;align-items:center;gap:14px;background:var(--soft-pink);border:2px solid var(--blush);border-radius:14px;padding:16px 20px;margin-bottom:30px;cursor:pointer;}
+  .toggle-switch{width:46px;height:26px;background:var(--blush);border-radius:13px;position:relative;transition:background 0.3s;flex-shrink:0;}
+  .toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.15);}
+  .toggle-switch.on{background:var(--hot-pink);}
+  .toggle-switch.on::after{transform:translateX(20px);}
+  .toggle-text{font-size:0.88rem;}
+  .toggle-text strong{display:block;color:var(--dark);font-weight:600;}
+  .toggle-text small{color:var(--muted);font-size:0.78rem;}
+
+  /* SUMMARY */
+  .summary-card{background:linear-gradient(135deg,#1a0a10,#3d0a23);border-radius:24px;padding:36px;color:#fff;margin-bottom:30px;position:relative;overflow:hidden;}
+  .summary-card::before{content:'🦋';position:absolute;font-size:8rem;opacity:0.04;bottom:-20px;right:-20px;line-height:1;}
+  .summary-brand{font-family:'Dancing Script',cursive;font-size:1.5rem;color:var(--blush);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+  @media(max-width:480px){.summary-grid{grid-template-columns:1fr;}}
+  .summary-item label{font-size:0.65rem;letter-spacing:0.2em;color:rgba(247,197,216,0.5);text-transform:uppercase;display:block;margin-bottom:4px;}
+  .summary-item .val{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#fff;font-weight:400;}
+  .summary-divider{height:1px;background:rgba(247,197,216,0.15);margin:20px 0;}
+
+  /* BUTTONS */
+  .btn-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+  .btn-primary{background:var(--hot-pink);color:#fff;border:none;border-radius:50px;padding:15px 40px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;letter-spacing:0.05em;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 20px rgba(232,0,106,0.3);display:inline-flex;align-items:center;gap:10px;}
+  .btn-primary:hover{background:var(--deep-pink);transform:translateY(-2px);box-shadow:0 8px 28px rgba(232,0,106,0.4);}
+  .btn-secondary{background:transparent;color:var(--muted);border:2px solid var(--blush);border-radius:50px;padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+  .btn-secondary:hover{border-color:var(--hot-pink);color:var(--hot-pink);}
+
+  /* SUCCESS */
+  .success-panel{display:none;text-align:center;padding:60px 30px;animation:fadeUp 0.5s ease;}
+  .success-panel.show{display:block;}
+  .success-icon{width:90px;height:90px;border-radius:50%;background:var(--soft-pink);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:2.5rem;border:3px solid var(--blush);}
+  .success-panel h2{font-family:'Dancing Script',cursive;font-size:2.8rem;color:var(--hot-pink);margin-bottom:12px;}
+  .success-panel p{color:var(--muted);max-width:420px;margin:0 auto 30px;line-height:1.7;}
+  .booking-ref{display:inline-block;background:var(--soft-pink);border:2px dashed var(--blush);border-radius:12px;padding:14px 30px;font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--hot-pink);letter-spacing:0.2em;margin-bottom:16px;}
+  .booking-ref-hint{font-size:0.8rem;color:var(--muted);margin-bottom:28px;}
+  .notify-badge{display:none;max-width:440px;margin:0 auto 24px;border-radius:10px;padding:13px 18px;font-family:'DM Sans',sans-serif;font-size:0.82rem;line-height:1.6;border:2px solid var(--blush);color:var(--text);transition:all 0.3s;}
+  .notify-badge.sending{background:#fff8e1;border-color:#ffc107;color:#7b5e00;}
+  .notify-badge.success{background:#f0fff4;border-color:#4caf50;color:#2e7d32;}
+  .notify-badge.fallback{background:var(--soft-pink);border-color:var(--blush);color:var(--deep-pink);}
+  .btn-wa{display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;border:none;padding:13px 28px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;margin-bottom:14px;}
+  .btn-wa:hover{background:#1da851;}
+
+  /* CONTACT */
+  .contact-bar{background:var(--dark);padding:28px 20px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:28px;}
+  .contact-item{display:flex;align-items:center;gap:8px;color:rgba(247,197,216,0.8);font-size:0.82rem;}
+  .contact-item a{color:inherit;text-decoration:none;}
+  .contact-item a:hover{color:var(--blush);}
+  footer{background:#120608;text-align:center;padding:18px 20px;color:rgba(247,197,216,0.2);font-size:0.72rem;letter-spacing:0.1em;}
+  footer span{color:var(--hot-pink);}
+  footer a{color:rgba(247,197,216,0.2);text-decoration:none;}
+  footer a:hover{color:var(--blush);}
+
+  @media(max-width:560px){
+    .step-label{display:none;}
+    .service-grid{grid-template-columns:1fr;}
+    .time-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
 </head>
 <body>
 
-<!-- HERO -->
 <section class="hero">
-  <span class="butterfly">🦋</span>
-  <span class="butterfly">🦋</span>
-  <span class="butterfly">🦋</span>
-  <span class="butterfly">🦋</span>
-  <span class="butterfly">🦋</span>
-
+  <span class="butterfly">🦋</span><span class="butterfly">🦋</span>
+  <span class="butterfly">🦋</span><span class="butterfly">🦋</span><span class="butterfly">🦋</span>
   <div class="hero-inner">
     <p class="hero-tag">Kingston, Jamaica &nbsp;·&nbsp; House Calls Available</p>
-    <h1>
-      <span>Crowned by</span>
-      Samoya
-    </h1>
+    <h1><span>Crowned by</span>Samoya</h1>
     <p class="hero-sub">Where every strand tells your story.</p>
     <button class="scroll-cta" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">
       ✦ &nbsp;Book Your Appointment
     </button>
   </div>
-
   <div class="scroll-hint">Scroll</div>
 </section>
 
-<!-- TICKER -->
 <div class="services-strip">
   <div class="services-ticker">
-    <span>Knotless Braids</span>
-    <span>Cornrow Braids</span>
-    <span>Locs</span>
-    <span>Curls</span>
-    <span>Multicolor</span>
-    <span>Male Hair</span>
-    <span>Kids Hair</span>
+    <span>Knotless Braids</span><span>Cornrow Braids</span><span>Locs</span>
+    <span>Curls</span><span>Multicolor</span><span>Male Hair</span><span>Kids Hair</span>
     <span>House Calls Available</span>
-    <span>Knotless Braids</span>
-    <span>Cornrow Braids</span>
-    <span>Locs</span>
-    <span>Curls</span>
-    <span>Multicolor</span>
-    <span>Male Hair</span>
-    <span>Kids Hair</span>
+    <span>Knotless Braids</span><span>Cornrow Braids</span><span>Locs</span>
+    <span>Curls</span><span>Multicolor</span><span>Male Hair</span><span>Kids Hair</span>
     <span>House Calls Available</span>
   </div>
 </div>
 
-<!-- BOOKING SECTION -->
 <section class="booking-section" id="booking">
-  <!-- Header -->
-  <div style="text-align:center; margin-bottom: 50px;">
-    <p class="section-label" style="justify-content:center;">Step by Step</p>
-    <h2 class="section-title">Book Your <em>Perfect Look</em></h2>
-    <p class="section-sub" style="margin: 0 auto;">Choose your service, pick a date and time that works for you, and we'll take care of the rest.</p>
-  </div>
+  <p class="section-label">Step by Step</p>
+  <h2 class="section-title">Book Your <em>Perfect Look</em></h2>
+  <p class="section-sub">Choose your service, pick a date and time that works for you, and we'll take care of the rest.</p>
 
   <!-- Progress -->
   <div class="step-progress" id="stepProgress">
-    <div class="step-item active" data-step="1">
-      <div class="step-num">1</div>
-      <span class="step-label">Choose Service</span>
-    </div>
+    <div class="step-item active" data-step="1"><div class="step-num">1</div><span class="step-label">Choose Service</span></div>
     <div class="step-connector" id="conn1"></div>
-    <div class="step-item" data-step="2">
-      <div class="step-num">2</div>
-      <span class="step-label">Pick Date & Time</span>
-    </div>
+    <div class="step-item" data-step="2"><div class="step-num">2</div><span class="step-label">Date & Time</span></div>
     <div class="step-connector" id="conn2"></div>
-    <div class="step-item" data-step="3">
-      <div class="step-num">3</div>
-      <span class="step-label">Your Details</span>
-    </div>
+    <div class="step-item" data-step="3"><div class="step-num">3</div><span class="step-label">Your Details</span></div>
     <div class="step-connector" id="conn3"></div>
-    <div class="step-item" data-step="4">
-      <div class="step-num">4</div>
-      <span class="step-label">Confirm</span>
-    </div>
+    <div class="step-item" data-step="4"><div class="step-num">4</div><span class="step-label">Confirm</span></div>
   </div>
 
   <!-- STEP 1: Services -->
   <div class="form-panel active" id="step1">
     <div class="service-grid">
-      <div class="service-card" data-service="Knotless Braid">
-        <div class="service-check"></div>
-        <div class="service-icon">💆‍♀️</div>
-        <div class="service-name">Knotless Braid</div>
-        <div class="service-desc">Natural-looking, tension-free braids. Price based on length and thickness.</div>
-      </div>
-      <div class="service-card" data-service="Cornrow Braid">
-        <div class="service-check"></div>
-        <div class="service-icon">✨</div>
-        <div class="service-name">Cornrow Braid</div>
-        <div class="service-desc">Classic cornrows in any pattern. Price based on length and style.</div>
-      </div>
-      <div class="service-card" data-service="Locs">
-        <div class="service-check"></div>
-        <div class="service-icon">🌿</div>
-        <div class="service-name">Locs</div>
-        <div class="service-desc">Fresh starts or maintenance locs. Pricing based on length and density.</div>
-      </div>
-      <div class="service-card" data-service="Curls">
-        <div class="service-check"></div>
-        <div class="service-icon">🌸</div>
-        <div class="service-name">Curls</div>
-        <div class="service-desc">Beautiful defined curls to bring out your natural texture.</div>
-      </div>
-      <div class="service-card" data-service="Multicolor">
-        <div class="service-check"></div>
-        <div class="service-icon">🎨</div>
-        <div class="service-name">Multicolor</div>
-        <div class="service-desc">Bold, vibrant color additions to any style.</div>
-      </div>
-      <div class="service-card" data-service="Male Hair">
-        <div class="service-check"></div>
-        <div class="service-icon">💈</div>
-        <div class="service-name">Male Hair</div>
-        <div class="service-desc">Styles tailored for men. Pricing based on style and length.</div>
-      </div>
-      <div class="service-card" data-service="Kids Hair">
-        <div class="service-check"></div>
-        <div class="service-icon">👶</div>
-        <div class="service-name">Kids Hair</div>
-        <div class="service-desc">Fun and stylish hairdos for kids. Pricing based on style and length.</div>
-      </div>
+      <div class="service-card" data-service="Knotless Braid"><div class="service-check"></div><div class="service-icon">💆‍♀️</div><div class="service-name">Knotless Braid</div><div class="service-desc">Natural-looking, tension-free braids. Price based on length and thickness.</div></div>
+      <div class="service-card" data-service="Cornrow Braid"><div class="service-check"></div><div class="service-icon">✨</div><div class="service-name">Cornrow Braid</div><div class="service-desc">Classic cornrows in any pattern. Price based on length and style.</div></div>
+      <div class="service-card" data-service="Locs"><div class="service-check"></div><div class="service-icon">🌿</div><div class="service-name">Locs</div><div class="service-desc">Fresh starts or maintenance locs. Pricing based on length and density.</div></div>
+      <div class="service-card" data-service="Curls"><div class="service-check"></div><div class="service-icon">🌸</div><div class="service-name">Curls</div><div class="service-desc">Beautiful defined curls to bring out your natural texture.</div></div>
+      <div class="service-card" data-service="Multicolor"><div class="service-check"></div><div class="service-icon">🎨</div><div class="service-name">Multicolor</div><div class="service-desc">Bold, vibrant color additions to any style.</div></div>
+      <div class="service-card" data-service="Male Hair"><div class="service-check"></div><div class="service-icon">💈</div><div class="service-name">Male Hair</div><div class="service-desc">Styles tailored for men. Pricing based on style and length.</div></div>
+      <div class="service-card" data-service="Kids Hair"><div class="service-check"></div><div class="service-icon">👶</div><div class="service-name">Kids Hair</div><div class="service-desc">Fun and stylish hairdos for kids. Pricing based on style and length.</div></div>
     </div>
-
     <div class="btn-row" style="justify-content:flex-end;">
-      <button class="btn-primary" id="toStep2Btn" onclick="goStep(2)">Choose Date & Time &rarr;</button>
+      <button class="btn-primary" onclick="goStep(2)">Choose Date & Time →</button>
     </div>
   </div>
 
-  <!-- STEP 2: Calendar & Time -->
+  <!-- STEP 2: Calendar -->
   <div class="form-panel" id="step2">
     <div class="booking-row">
       <div class="cal-box">
         <div class="cal-header">
-          <button class="cal-nav" id="prevMonth" onclick="changeMonth(-1)">‹</button>
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
           <div class="cal-month" id="calMonthLabel"></div>
-          <button class="cal-nav" id="nextMonth" onclick="changeMonth(1)">›</button>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
         </div>
         <div class="cal-grid" id="calGrid">
-          <div class="cal-day-header">Su</div>
-          <div class="cal-day-header">Mo</div>
-          <div class="cal-day-header">Tu</div>
-          <div class="cal-day-header">We</div>
-          <div class="cal-day-header">Th</div>
-          <div class="cal-day-header">Fr</div>
+          <div class="cal-day-header">Su</div><div class="cal-day-header">Mo</div>
+          <div class="cal-day-header">Tu</div><div class="cal-day-header">We</div>
+          <div class="cal-day-header">Th</div><div class="cal-day-header">Fr</div>
           <div class="cal-day-header">Sa</div>
         </div>
       </div>
-
       <div class="time-box">
         <div class="time-label">Available Times</div>
-        <div class="time-grid" id="timeGrid">
-          <!-- generated by JS -->
-        </div>
+        <div class="time-grid" id="timeGrid"></div>
       </div>
     </div>
-
     <div class="btn-row">
-      <button class="btn-secondary" onclick="goStep(1)">&larr; Back</button>
-      <button class="btn-primary" onclick="goStep(3)">Your Details &rarr;</button>
+      <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn-primary" onclick="goStep(3)">Your Details →</button>
     </div>
   </div>
 
-  <!-- STEP 3: Personal Details -->
+  <!-- STEP 3: Details -->
   <div class="form-panel" id="step3">
     <div class="contact-grid">
-      <div class="field-group">
-        <label>First Name</label>
-        <input type="text" id="fname" placeholder="e.g. Kezia" />
-      </div>
-      <div class="field-group">
-        <label>Last Name</label>
-        <input type="text" id="lname" placeholder="e.g. Brown" />
-      </div>
-      <div class="field-group">
-        <label>Phone Number</label>
-        <input type="tel" id="phone" placeholder="e.g. 876-555-0000" />
-      </div>
-      <div class="field-group">
-        <label>Email Address</label>
-        <input type="email" id="email" placeholder="you@example.com" />
-      </div>
-      <div class="field-group">
-        <label>Hair Length</label>
-        <select id="hairLength">
-          <option value="">Select length</option>
-          <option>Short (ear length)</option>
-          <option>Medium (shoulder length)</option>
-          <option>Long (mid-back)</option>
-          <option>Extra Long (waist+)</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>How did you hear about us?</label>
-        <select id="referral">
-          <option value="">Select one</option>
-          <option>Instagram / TikTok</option>
-          <option>Friend / Family</option>
-          <option>Repeat Client</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div class="field-group full">
-        <label>Special Requests / Notes</label>
-        <textarea id="notes" placeholder="Any specific styles, references, allergies, or requests..."></textarea>
-      </div>
+      <div class="field-group"><label>First Name *</label><input type="text" id="fname" placeholder="e.g. Kezia" /></div>
+      <div class="field-group"><label>Last Name</label><input type="text" id="lname" placeholder="e.g. Brown" /></div>
+      <div class="field-group"><label>Phone / WhatsApp *</label><input type="tel" id="phone" placeholder="876-555-0000" /></div>
+      <div class="field-group"><label>Email Address</label><input type="email" id="email" placeholder="you@example.com" /></div>
+      <div class="field-group"><label>Hair Length</label><select id="hairLength"><option value="">Select length</option><option>Short (ear length)</option><option>Medium (shoulder length)</option><option>Long (mid-back)</option><option>Extra Long (waist+)</option></select></div>
+      <div class="field-group"><label>How did you hear about us?</label><select id="referral"><option value="">Select one</option><option>Instagram / TikTok</option><option>Friend / Family</option><option>Repeat Client</option><option>Other</option></select></div>
+      <div class="field-group full"><label>Special Requests / Notes</label><textarea id="notes" placeholder="Any specific styles, references, allergies, or requests..."></textarea></div>
     </div>
-
-    <!-- House Call Toggle -->
     <div class="toggle-row" onclick="toggleHouseCall()">
       <div class="toggle-switch" id="houseToggle"></div>
-      <div class="toggle-text">
-        <strong>Request a House Call</strong>
-        <small>We'll come to you — Kingston & surrounding areas</small>
-      </div>
+      <div class="toggle-text"><strong>Request a House Call</strong><small>We'll come to you — Kingston & surrounding areas</small></div>
     </div>
-
     <div class="btn-row">
-      <button class="btn-secondary" onclick="goStep(2)">&larr; Back</button>
-      <button class="btn-primary" onclick="goStep(4)">Review Booking &rarr;</button>
+      <button class="btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn-primary" onclick="goStep(4)">Review Booking →</button>
     </div>
   </div>
 
@@ -1085,60 +317,19 @@
     <div class="summary-card">
       <div class="summary-brand">✦ Crowned by Samoya</div>
       <div class="summary-grid">
-        <div class="summary-item">
-          <label>Service</label>
-          <div class="val" id="sum-service">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Starting Price</label>
-          <div class="val" id="sum-price">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Date</label>
-          <div class="val" id="sum-date">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Time</label>
-          <div class="val" id="sum-time">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Client</label>
-          <div class="val" id="sum-name">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Contact</label>
-          <div class="val" id="sum-contact">—</div>
-        </div>
-        <div class="summary-item">
-          <label>Hair Length</label>
-          <div class="val" id="sum-length">—</div>
-        </div>
-        <div class="summary-item">
-          <label>House Call</label>
-          <div class="val" id="sum-housecall">No</div>
-        </div>
+        <div class="summary-item"><label>Service</label><div class="val" id="sum-service">—</div></div>
+        <div class="summary-item"><label>Date</label><div class="val" id="sum-date">—</div></div>
+        <div class="summary-item"><label>Time</label><div class="val" id="sum-time">—</div></div>
+        <div class="summary-item"><label>Client</label><div class="val" id="sum-name">—</div></div>
+        <div class="summary-item"><label>Phone</label><div class="val" id="sum-contact">—</div></div>
+        <div class="summary-item"><label>Hair Length</label><div class="val" id="sum-length">—</div></div>
+        <div class="summary-item"><label>House Call</label><div class="val" id="sum-housecall">No</div></div>
       </div>
-      <div id="sum-notes-row" style="display:none;">
-        <div class="summary-divider"></div>
-        <div class="summary-item">
-          <label>Notes</label>
-          <div class="val" id="sum-notes" style="font-size:0.9rem;font-family:'DM Sans',sans-serif;"></div>
-        </div>
-      </div>
-      <div class="summary-divider"></div>
-      <div class="summary-price-row">
-        <span class="plabel">Estimated Starting Price</span>
-        <span class="price" id="sum-price-big">—</span>
-      </div>
+      <div id="sum-notes-row" style="display:none;"><div class="summary-divider"></div><div class="summary-item"><label>Notes</label><div class="val" id="sum-notes" style="font-size:0.9rem;font-family:'DM Sans',sans-serif;"></div></div></div>
     </div>
-
-    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:28px; text-align:center;">
-      By confirming, you agree to arrive on time or notify Samoya at least 2 hours in advance for cancellations.<br>
-      Final pricing will be confirmed at your appointment.
-    </p>
-
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:28px;text-align:center;">By confirming, you agree to arrive on time or notify Samoya at least 2 hours in advance for cancellations. Final pricing will be confirmed at your appointment.</p>
     <div class="btn-row">
-      <button class="btn-secondary" onclick="goStep(3)">&larr; Edit Details</button>
+      <button class="btn-secondary" onclick="goStep(3)">← Edit Details</button>
       <button class="btn-primary" onclick="confirmBooking()">✦ &nbsp;Confirm Booking</button>
     </div>
   </div>
@@ -1147,423 +338,368 @@
   <div class="success-panel" id="successPanel">
     <div class="success-icon">🌸</div>
     <h2>You're all booked!</h2>
-    <p>Thank you for choosing Crowned by Samoya. Your appointment has been requested. Samoya will confirm via WhatsApp or phone shortly.</p>
-    <div class="booking-ref" id="bookingRef">SBS-000000</div>
-    <p style="color:var(--muted); font-size:0.82rem; margin-bottom:24px;">Save this reference number for your records.</p>
-
-    <!-- Notification Status -->
-    <div class="notify-status" id="notifyStatus">
-      <div class="notify-item sending" id="notify-email">
-        <span class="notify-icon">📧</span>
-        <span class="notify-label">Sending email to Samoya...</span>
-        <span class="notify-dot"></span>
-      </div>
+    <p>Thank you for choosing Crowned by Samoya. Your appointment has been requested. Samoya will confirm via WhatsApp shortly.</p>
+    <div class="booking-ref" id="bookingRef">CBS-000000</div>
+    <p class="booking-ref-hint">Save this reference number for your records.</p>
+    <div class="notify-badge" id="notifyBadge"></div>
+    <div id="waFallback" style="display:none;margin-bottom:14px;">
+      <a id="waLink" href="#" target="_blank" class="btn-wa">💬 &nbsp;Send via WhatsApp</a>
     </div>
-
-    <div style="margin-top:28px;">
-      <button class="btn-primary" onclick="resetBooking()">Book Another Appointment</button>
-    </div>
+    <button class="btn-secondary" onclick="resetBooking()">Book Another Appointment</button>
   </div>
 </section>
 
-<!-- CONTACT BAR -->
 <div class="contact-bar">
-  <div class="contact-item"><span>📱</span> <a href="tel:6582175024">658-217-5024</a></div>
-  <div class="contact-item"><span>📍</span> <span>11 Sixth Street, Olympic Way, Kingston 11</span></div>
-  <div class="contact-item"><span>📸</span> <a href="https://instagram.com/crownedbysamoya__" target="_blank">@crownedbysamoya_</a></div>
-  <div class="contact-item"><span>🎵</span> <a href="https://tiktok.com/@thatgurl_moyaa" target="_blank">@thatgurl_moyaa</a></div>
+  <div class="contact-item"><span>📱</span><a href="tel:6582175024">658-217-5024</a></div>
+  <div class="contact-item"><span>📍</span><span>11 Sixth Street, Olympic Way, Kingston 11</span></div>
+  <div class="contact-item"><span>📸</span><a href="https://instagram.com/crownedbysamoya__" target="_blank">@crownedbysamoya_</a></div>
+  <div class="contact-item"><span>🎵</span><a href="https://tiktok.com/@thatgurl_moyaa" target="_blank">@thatgurl_moyaa</a></div>
 </div>
 
 <footer>
-  &copy; 2025 Crowned by Samoya &nbsp;·&nbsp; All rights reserved &nbsp;·&nbsp; Designed by <span>AtomicProd</span> &nbsp;·&nbsp; 876-836-9939
+  &copy; 2025 Crowned by Samoya &nbsp;·&nbsp; All rights reserved &nbsp;·&nbsp;
+  Designed by <span>AtomicProd</span> &nbsp;·&nbsp; 876-836-9939 &nbsp;·&nbsp;
+  <a href="dashboard.html" title="Owner Dashboard">Owner Portal</a>
 </footer>
 
 <script>
-  // =====================================================================
-  //  OWNER CONFIGURATION — Fill these in before going live
-  // =====================================================================
-  const OWNER_CONFIG = {
-    emailjs: {
-      publicKey:  'WhFkp6kOSjf5xoeTP',  // From emailjs.com → Account → API Keys
-      serviceId:  'service_tbvgs6i',           // From emailjs.com → Email Services
-      templateId: 'template_hvnh11q',          // From emailjs.com → Email Templates
-      ownerEmail: 'crownedsamoya@gmail.com'         // The email address to receive bookings
-    }
-  };
-  // =====================================================================
+/* ═══════════════════════════════════════════════════
+   CONFIGURATION
+   FIX: to_email passed dynamically → set template
+   "To Email" field to {{to_email}} in EmailJS
+═══════════════════════════════════════════════════ */
+const CFG = {
+  emailjs: {
+    publicKey:  'WhFkp6kOSjf5xoeTP',
+    serviceId:  'service_tbvgs6i',
+    templateId: 'template_hvnh11q',
+    ownerEmail: 'crownedsamoya@gmail.com',  // ← receives bookings
+  },
+  ownerWA: '16582175024',
+};
 
-  // Initialize EmailJS
-  (function() {
-    try { emailjs.init({ publicKey: OWNER_CONFIG.emailjs.publicKey }); } catch(e) {}
-  })();
+(function(){ try{ emailjs.init({ publicKey: CFG.emailjs.publicKey }); }catch(e){} })();
 
-  // ===== STATE =====
-  const state = {
-    service: null,
-    servicePrice: null,
-    selectedDate: null,
-    selectedTime: null,
-    houseCall: false,
-    currentStep: 1,
-    calYear: new Date().getFullYear(),
-    calMonth: new Date().getMonth()
-  };
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+const state = {
+  service: null, selectedDate: null, selectedTime: null,
+  houseCall: false, currentStep: 1,
+  calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
+};
 
-  // ===== SERVICE SELECTION =====
-  document.querySelectorAll('.service-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      state.service = card.dataset.service;
-      state.servicePrice = card.dataset.price;
-    });
+// Blocked days loaded from Samoya's dashboard
+let blockedDays = new Set();
+
+async function loadBlockedDays() {
+  try {
+    if (!window._db || !window._doc || !window._getDoc) return;
+    const snap = await window._getDoc(
+      window._doc(window._db, 'settings', 'availability')
+    );
+    if (snap.exists()) blockedDays = new Set(snap.data().offDays || []);
+  } catch(e) { console.error('loadBlockedDays:', e); }
+}
+
+/* ═══════════════════════════════════════════════════
+   SERVICE CARDS
+═══════════════════════════════════════════════════ */
+document.querySelectorAll('.service-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state.service = card.dataset.service;
   });
+});
 
-  // ===== STEPS =====
-  function goStep(n) {
-    if (n > state.currentStep) {
-      if (state.currentStep === 1 && !state.service) { alert('Please select a service first.'); return; }
-      if (state.currentStep === 2 && !state.selectedDate) { alert('Please select a date.'); return; }
-      if (state.currentStep === 2 && !state.selectedTime) { alert('Please select a time slot.'); return; }
-      if (state.currentStep === 3) {
-        const fn = document.getElementById('fname').value.trim();
-        const ph = document.getElementById('phone').value.trim();
-        if (!fn || !ph) { alert('Please enter your name and phone number.'); return; }
-      }
-    }
-    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById(`step${n}`).classList.add('active');
-    document.querySelectorAll('.step-item').forEach(item => {
-      const s = parseInt(item.dataset.step);
-      item.classList.remove('active', 'done');
-      if (s < n) item.classList.add('done');
-      if (s === n) item.classList.add('active');
-    });
-    document.getElementById('conn1').classList.toggle('done', n > 1);
-    document.getElementById('conn2').classList.toggle('done', n > 2);
-    document.getElementById('conn3').classList.toggle('done', n > 3);
-    state.currentStep = n;
-    if (n === 4) fillSummary();
-    window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior: 'smooth' });
-  }
-
-  // ===== CALENDAR =====
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-  function renderCalendar() {
-    const grid = document.getElementById('calGrid');
-    document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
-    const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
-    grid.innerHTML = '';
-    headers.forEach(h => grid.appendChild(h));
-    const first = new Date(state.calYear, state.calMonth, 1).getDay();
-    const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
-    const today = new Date();
-    for (let i = 0; i < first; i++) {
-      const el = document.createElement('div');
-      el.className = 'cal-day empty';
-      grid.appendChild(el);
-    }
-    for (let d = 1; d <= daysInMonth; d++) {
-      const el = document.createElement('div');
-      el.className = 'cal-day';
-      el.textContent = d;
-      const thisDate = new Date(state.calYear, state.calMonth, d);
-      const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      if (isPast) { el.classList.add('past'); }
-      else {
-        const isToday = d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear();
-        if (isToday) el.classList.add('today');
-        const dateStr = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        if (state.selectedDate === dateStr) el.classList.add('selected');
-        el.addEventListener('click', async () => {
-        state.selectedDate = dateStr;
-        state.selectedTime = null;
-        renderCalendar();
-        await renderTimeSlots();
-    });
-
-      }
-      grid.appendChild(el);
+/* ═══════════════════════════════════════════════════
+   STEP NAVIGATION
+═══════════════════════════════════════════════════ */
+function goStep(n) {
+  if (n > state.currentStep) {
+    if (state.currentStep === 1 && !state.service) { alert('Please select a service first.'); return; }
+    if (state.currentStep === 2 && !state.selectedDate) { alert('Please select a date.'); return; }
+    if (state.currentStep === 2 && !state.selectedTime) { alert('Please select a time.'); return; }
+    if (state.currentStep === 3) {
+      if (!document.getElementById('fname').value.trim()) { alert('Please enter your first name.'); return; }
+      if (!document.getElementById('phone').value.trim()) { alert('Please enter your phone number.'); return; }
     }
   }
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`step${n}`).classList.add('active');
+  document.querySelectorAll('.step-item').forEach(item => {
+    const s = parseInt(item.dataset.step);
+    item.classList.remove('active','done');
+    if (s < n) item.classList.add('done');
+    if (s === n) item.classList.add('active');
+  });
+  document.getElementById('conn1').classList.toggle('done', n > 1);
+  document.getElementById('conn2').classList.toggle('done', n > 2);
+  document.getElementById('conn3').classList.toggle('done', n > 3);
+  state.currentStep = n;
+  if (n === 4) fillSummary();
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior:'smooth' });
+}
 
-  function changeMonth(dir) {
-    state.calMonth += dir;
-    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
-    if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
-    renderCalendar();
+/* ═══════════════════════════════════════════════════
+   CALENDAR — blocked days from dashboard applied
+═══════════════════════════════════════════════════ */
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
+  const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
+  grid.innerHTML = '';
+  headers.forEach(h => grid.appendChild(h));
+  const first = new Date(state.calYear, state.calMonth, 1).getDay();
+  const total = new Date(state.calYear, state.calMonth+1, 0).getDate();
+  const today = new Date();
+
+  for (let i=0; i<first; i++) {
+    const el = document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el);
   }
+  for (let d=1; d<=total; d++) {
+    const el = document.createElement('div'); el.className='cal-day'; el.textContent=d;
+    const ds = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const thisDate = new Date(state.calYear, state.calMonth, d);
+    const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // ===== TIME SLOTS =====
-  const allSlots = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
-  const unavailableSlots = ['10:00 AM','1:00 PM','4:00 PM'];
+    if (isPast) {
+      el.classList.add('past');
+    } else if (blockedDays.has(ds)) {
+      // Samoya marked this day off in her dashboard
+      el.classList.add('past','blocked');
+      el.title = 'Not available';
+    } else {
+      if (d===today.getDate()&&state.calMonth===today.getMonth()&&state.calYear===today.getFullYear()) el.classList.add('today');
+      if (state.selectedDate===ds) el.classList.add('selected');
+      el.addEventListener('click', async () => {
+        state.selectedDate = ds; state.selectedTime = null;
+        renderCalendar(); await renderTimeSlots();
+      });
+    }
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(dir) {
+  state.calMonth += dir;
+  if (state.calMonth > 11) { state.calMonth=0; state.calYear++; }
+  if (state.calMonth < 0)  { state.calMonth=11; state.calYear--; }
+  renderCalendar();
+}
+
+/* ═══════════════════════════════════════════════════
+   TIME SLOTS — live from Firestore
+═══════════════════════════════════════════════════ */
+const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
 async function renderTimeSlots() {
-    const grid = document.getElementById('timeGrid');
-    grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Loading times...</p>';
-
-    if (!state.selectedDate) {
-        grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Select a date to see available times.</p>';
-        return;
+  const grid = document.getElementById('timeGrid');
+  grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Loading times…</p>';
+  if (!state.selectedDate) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Select a date first.</p>';
+    return;
+  }
+  let takenSlots = [];
+  try {
+    if (window._db && window._query && window._getDocs) {
+      const dateLabel = new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      const q = window._query(window._collection(window._db,'bookings'),window._where('date','==',dateLabel),window._where('status','==','accepted'));
+      const snap = await window._getDocs(q);
+      snap.forEach(d => takenSlots.push(d.data().time));
     }
+  } catch(e) { console.error(e); }
 
-    // Fetch taken slots from Firestore for selected date
-    let takenSlots = [];
-    try {
-        const dateLabel = new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
-        const q = window.fsQuery(
-            window.fsCollection(window.db, 'bookings'),
-            window.fsWhere('date', '==', dateLabel),
-            window.fsWhere('status', '==', 'accepted')
-        );
-        const snapshot = await window.fsGetDocs(q);
-        snapshot.forEach(doc => {
-            takenSlots.push(doc.data().time);
-        });
-    } catch (err) {
-        console.error('Error fetching taken slots:', err);
-    }
-
-    grid.innerHTML = '';
-    allSlots.forEach(slot => {
-        const el = document.createElement('div');
-        const isUnavail = unavailableSlots.includes(slot) || takenSlots.includes(slot);
-        const isTaken = takenSlots.includes(slot);
-
-        el.className = 'time-slot' + 
-            (isUnavail ? ' unavailable' : '') + 
-            (state.selectedTime === slot ? ' selected' : '');
-
-        // Show "Booked" label for Firebase taken slots
-        el.innerHTML = isTaken 
-            ? `${slot}<br><small style="font-size:0.65rem;opacity:0.7;">Booked</small>`
-            : slot;
-
-        if (!isUnavail) {
-            el.addEventListener('click', () => {
-                state.selectedTime = slot;
-                renderTimeSlots();
-            });
-        }
-        grid.appendChild(el);
-    });
+  grid.innerHTML = '';
+  ALL_SLOTS.forEach(slot => {
+    const el = document.createElement('div');
+    const taken = takenSlots.includes(slot);
+    el.className = 'time-slot' + (taken?' unavailable':'') + (state.selectedTime===slot?' selected':'');
+    el.innerHTML = taken ? `${slot}<br><small style="font-size:0.65rem;opacity:0.7;">Booked</small>` : slot;
+    if (!taken) el.addEventListener('click', () => { state.selectedTime=slot; renderTimeSlots(); });
+    grid.appendChild(el);
+  });
 }
 
-  // ===== HOUSE CALL =====
-  function toggleHouseCall() {
-    state.houseCall = !state.houseCall;
-    document.getElementById('houseToggle').classList.toggle('on', state.houseCall);
-  }
+/* ═══════════════════════════════════════════════════
+   HOUSE CALL
+═══════════════════════════════════════════════════ */
+function toggleHouseCall() {
+  state.houseCall = !state.houseCall;
+  document.getElementById('houseToggle').classList.toggle('on', state.houseCall);
+}
 
-  // ===== SUMMARY =====
-  function fillSummary() {
-    const fname = document.getElementById('fname').value.trim();
-    const lname = document.getElementById('lname').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const length = document.getElementById('hairLength').value;
-    const notes = document.getElementById('notes').value.trim();
-    document.getElementById('sum-service').textContent = state.service || '—';
-    // document.getElementById('sum-price').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
-    // document.getElementById('sum-price-big').textContent = state.servicePrice ? 'J$' + state.servicePrice : '—';
-    if (state.selectedDate) {
-      const d = new Date(state.selectedDate + 'T00:00:00');
-      document.getElementById('sum-date').textContent = d.toLocaleDateString('en-JM', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    }
-    document.getElementById('sum-time').textContent = state.selectedTime || '—';
-    document.getElementById('sum-name').textContent = [fname, lname].filter(Boolean).join(' ') || '—';
-    document.getElementById('sum-contact').textContent = phone + (email ? ` · ${email}` : '');
-    document.getElementById('sum-length').textContent = length || '—';
-    document.getElementById('sum-housecall').textContent = state.houseCall ? '✓ Yes, please' : 'No';
-    if (notes) {
-      document.getElementById('sum-notes-row').style.display = 'block';
-      document.getElementById('sum-notes').textContent = notes;
-    } else {
-      document.getElementById('sum-notes-row').style.display = 'none';
-    }
+/* ═══════════════════════════════════════════════════
+   SUMMARY
+═══════════════════════════════════════════════════ */
+function fillSummary() {
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const length= document.getElementById('hairLength').value;
+  const notes = document.getElementById('notes').value.trim();
+  document.getElementById('sum-service').textContent   = state.service||'—';
+  document.getElementById('sum-time').textContent      = state.selectedTime||'—';
+  document.getElementById('sum-name').textContent      = [fname,lname].filter(Boolean).join(' ')||'—';
+  document.getElementById('sum-contact').textContent   = phone||'—';
+  document.getElementById('sum-length').textContent    = length||'—';
+  document.getElementById('sum-housecall').textContent = state.houseCall?'✓ Yes, please':'No';
+  if (state.selectedDate) {
+    document.getElementById('sum-date').textContent = new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   }
+  if (notes) {
+    document.getElementById('sum-notes-row').style.display='block';
+    document.getElementById('sum-notes').textContent=notes;
+  } else {
+    document.getElementById('sum-notes-row').style.display='none';
+  }
+}
 
-  // ===== BUILD BOOKING SUMMARY TEXT =====
-  function buildBookingText(ref) {
-    const fname = document.getElementById('fname').value.trim();
-    const lname = document.getElementById('lname').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const length = document.getElementById('hairLength').value;
-    const notes = document.getElementById('notes').value.trim();
-    const dateLabel = state.selectedDate
-      ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-      : '—';
-    return {
+/* ═══════════════════════════════════════════════════
+   CONFIRM BOOKING
+═══════════════════════════════════════════════════ */
+async function confirmBooking() {
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const length= document.getElementById('hairLength').value;
+  const notes = document.getElementById('notes').value.trim();
+  const name  = [fname,lname].filter(Boolean).join(' ');
+  const ref   = 'CBS-' + Math.floor(100000 + Math.random()*900000);
+  const dateLabel = state.selectedDate
+    ? new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    : '—';
+
+  /* Double-check slot isn't taken */
+  try {
+    if (window._db) {
+      const q = window._query(window._collection(window._db,'bookings'),window._where('date','==',dateLabel),window._where('time','==',state.selectedTime),window._where('status','==','accepted'));
+      const snap = await window._getDocs(q);
+      if (!snap.empty) { alert('Sorry, this time slot was just taken. Please select a different time.'); goStep(2); return; }
+    }
+  } catch(e) {}
+
+  /* Show success */
+  document.getElementById('bookingRef').textContent = ref;
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('stepProgress').style.display = 'none';
+  document.getElementById('successPanel').classList.add('show');
+  window.scrollTo({ top: document.getElementById('booking').offsetTop-20, behavior:'smooth' });
+  showBadge('sending','⏳ Sending booking to Samoya…');
+
+  const booking = {
+    ref, clientName:name, phone, email,
+    service:state.service, date:dateLabel, rawDate:state.selectedDate,
+    time:state.selectedTime, hairLength:length||'—',
+    houseCall:state.houseCall?'Yes':'No', notes:notes||'None',
+    status:'pending', createdAt:new Date().toISOString(),
+  };
+
+  /* 1 — Firestore */
+  let docId = null, firestoreOk = false;
+  try {
+    if (window._db && window._addDoc && window._collection) {
+      const ref2 = await window._addDoc(window._collection(window._db,'bookings'), booking);
+      docId = ref2.id; firestoreOk = true;
+    }
+  } catch(e) { console.error('Firestore:', e); }
+
+  /* 2 — EmailJS
+     FIX: to_email passed as variable. Set template "To Email" to {{to_email}}
+     FIX: client_phone passed explicitly
+  */
+  let emailOk = false;
+  try {
+    await emailjs.send(CFG.emailjs.serviceId, CFG.emailjs.templateId, {
+      to_email:     CFG.emailjs.ownerEmail,
+      booking_id:   docId||'—',
       ref,
-      clientName: [fname, lname].filter(Boolean).join(' '),
-      phone,
-      email,
-      service: state.service,
-    //   price: state.servicePrice ? 'J$' + state.servicePrice : '—',
-      date: dateLabel,
-      time: state.selectedTime,
-      hairLength: length || '—',
-      houseCall: state.houseCall ? 'Yes' : 'No',
-      notes: notes || 'None'
-    };
+      client_name:  name,
+      client_phone: phone,
+      email:        email||'Not provided',
+      service:      state.service,
+      date:         dateLabel,
+      time:         state.selectedTime,
+      hair_length:  length||'—',
+      house_call:   state.houseCall?'Yes':'No',
+      notes:        notes||'None',
+    });
+    emailOk = true;
+  } catch(e) { console.error('EmailJS:', e); }
+
+  /* 3 — Result */
+  if (firestoreOk || emailOk) {
+    showBadge('success', `✅ Booking logged${firestoreOk?' in system':''}${emailOk?' & email sent to Samoya':''}. She will contact you to confirm shortly.`);
+  } else {
+    showBadge('fallback','⚠️ Could not send automatically. Use the button below to notify Samoya via WhatsApp.');
+    const msg = buildWAMsg(ref, name, phone, dateLabel, length, notes);
+    document.getElementById('waLink').href = `https://wa.me/${CFG.ownerWA}?text=${msg}`;
+    document.getElementById('waFallback').style.display = 'block';
   }
-
-  // ===== NOTIFICATION HELPERS =====
-  function setNotifyStatus(id, status, message) {
-    const el = document.getElementById(`notify-${id}`);
-    if (!el) return;
-    el.className = `notify-item ${status}`;
-    el.querySelector('.notify-label').textContent = message;
-    const dot = el.querySelector('.notify-dot');
-    if (status === 'success') dot.textContent = '✓';
-    else if (status === 'error') dot.textContent = '✕';
-  }
-
-  // --- 1. EMAIL via EmailJS ---
-  async function sendEmail(booking) {
-    const cfg = OWNER_CONFIG.emailjs;
-    if (!cfg.publicKey || cfg.publicKey === 'YOUR_EMAILJS_PUBLIC_KEY') {
-      setNotifyStatus('email', 'error', 'Email: not configured (see setup banner)');
-      return;
-    }
-    try {
-        // 1. SAVE TO FIRESTORE AS PENDING
-      const docRef = await window.fsAddDoc(window.fsCollection(window.db, 'bookings'), {
-        ref:          booking.ref,
-        clientName:   booking.clientName,
-        phone:        booking.phone,
-        email:        booking.email,
-        service:      booking.service,
-        date:         booking.date,
-        time:         booking.time,
-        hairLength:   booking.hairLength,
-        houseCall:    booking.houseCall,
-        notes:        booking.notes,
-        status:       'pending',
-        createdAt:    new Date().toISOString()
-      });
-
-      console.log('Booking saved to Firestore with ID:', docRef.id);
-
-    await emailjs.send(cfg.serviceId, cfg.templateId, {
-        to_email:    cfg.ownerEmail,
-        booking_id:  docRef.id,           // Firestore document ID for reference
-        ref:         booking.ref,
-        client_name: booking.clientName,
-        phone:       booking.phone,
-        email:       booking.email,
-        service:     booking.service,
-        // price:       booking.price,
-        date:        booking.date,
-        time:        booking.time,
-        hair_length: booking.hairLength,
-        house_call:  booking.houseCall,
-        notes:       booking.notes
-      });
-
-      // NEW - confirms booking to customer
-    // await emailjs.send(cfg.serviceId, 'template_m2txghh', {
-    //     to_email:    booking.email,      // customer receives it
-    //     ref:         booking.ref,
-    //     client_name: booking.clientName,
-    //     email:       booking.email,      // customer's email (for template variables)
-    //     service:     booking.service,
-    //     date:        booking.date,
-    //     time:        booking.time,
-    //     hair_length: booking.hairLength,
-    //     house_call:  booking.houseCall,
-    //     notes:       booking.notes
-    //   });
-
-      setNotifyStatus('email', 'success', 'Email sent to Samoya ✓');
-    } catch (err) {
-      setNotifyStatus('email', 'error', 'Email failed — check EmailJS config');
-      console.error('EmailJS error:', err);
-    }
-  }
-
-  // --- 2. WHATSAPP deep link ---
-  // (removed — email only)
-
-  // --- 3. TELEGRAM Bot ---
-  // (removed — email only)
-
-  async function isTimeSlotTaken(date, time) {
-    try {
-        const q = window.fsQuery(
-            window.fsCollection(window.db, 'bookings'),
-            window.fsWhere('date', '==', date),
-            window.fsWhere('time', '==', time),
-            window.fsWhere('status', '==', 'accepted')
-        );
-        const snapshot = await window.fsGetDocs(q);
-        return !snapshot.empty;
-    } catch (err) {
-        console.error('Error checking slot:', err);
-        return false;
-    }
 }
 
-  // ===== CONFIRM BOOKING =====
-  async function confirmBooking() {
-    // Check if slot is already taken
-    const dateLabel = state.selectedDate
-      ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-      : '—';
+function buildWAMsg(ref, name, phone, dateLabel, length, notes) {
+  return encodeURIComponent(
+`🦋 *New Booking — Crowned by Samoya*
+━━━━━━━━━━━━━━━━━━
+📋 Ref: ${ref}
+👤 Client: ${name}
+📱 Phone: ${phone}
+━━━━━━━━━━━━━━━━━━
+✂️ Service: ${state.service}
+📅 Date: ${dateLabel}
+🕐 Time: ${state.selectedTime}
+💇 Length: ${length||'—'}
+🏠 House Call: ${state.houseCall?'Yes':'No'}
+📝 Notes: ${notes||'None'}
+━━━━━━━━━━━━━━━━━━
+Please confirm this appointment.`);
+}
 
-    const taken = await isTimeSlotTaken(dateLabel, state.selectedTime);
-    if (taken) {
-        alert('Sorry, this time slot is no longer available. Please select a different time.');
-        goStep(2);
-        return;
-    }
+function showBadge(type, msg) {
+  const el = document.getElementById('notifyBadge');
+  el.className = `notify-badge ${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
 
-    const ref = 'SBS-' + Math.floor(100000 + Math.random() * 900000);
-    document.getElementById('bookingRef').textContent = ref;
+/* ═══════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════ */
+function resetBooking() {
+  state.service=null; state.selectedDate=null; state.selectedTime=null;
+  state.houseCall=false; state.currentStep=1;
+  state.calMonth=new Date().getMonth(); state.calYear=new Date().getFullYear();
+  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  ['fname','lname','phone','email','notes'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('hairLength').value=''; document.getElementById('referral').value='';
+  document.getElementById('houseToggle').classList.remove('on');
+  document.getElementById('successPanel').classList.remove('show');
+  document.getElementById('stepProgress').style.display='flex';
+  document.getElementById('waFallback').style.display='none';
+  document.getElementById('notifyBadge').style.display='none';
+  document.querySelectorAll('.step-item').forEach(item => {
+    item.classList.remove('active','done');
+    if (item.dataset.step==='1') item.classList.add('active');
+  });
+  ['conn1','conn2','conn3'].forEach(id => document.getElementById(id).classList.remove('done'));
+  document.getElementById('step1').classList.add('active');
+  renderCalendar(); renderTimeSlots();
+}
 
-    // Show success panel
-    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('stepProgress').style.display = 'none';
-    document.getElementById('successPanel').classList.add('show');
-    window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior: 'smooth' });
-
-    // Send email notification
-    const booking = buildBookingText(ref);
-    await sendEmail(booking);
-  }
-
-  // ===== RESET =====
-  function resetBooking() {
-    state.service = null; state.servicePrice = null;
-    state.selectedDate = null; state.selectedTime = null;
-    state.houseCall = false; state.currentStep = 1;
-    state.calMonth = new Date().getMonth();
-    state.calYear = new Date().getFullYear();
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    ['fname','lname','phone','email','notes'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('hairLength').value = '';
-    document.getElementById('referral').value = '';
-    document.getElementById('houseToggle').classList.remove('on');
-    document.getElementById('successPanel').classList.remove('show');
-    document.getElementById('stepProgress').style.display = 'flex';
-    document.querySelectorAll('.step-item').forEach(item => {
-      item.classList.remove('active', 'done');
-      if (item.dataset.step === '1') item.classList.add('active');
-    });
-    ['conn1','conn2','conn3'].forEach(id => document.getElementById(id).classList.remove('done'));
-    setNotifyStatus('email', 'sending', 'Sending email to Samoya...');
-    document.getElementById('step1').classList.add('active');
-    renderCalendar();
-    renderTimeSlots();
-  }
-
-  // Init
+/* ═══════════════════════════════════════════════════
+   INIT — load blocked days first then render
+═══════════════════════════════════════════════════ */
+async function init() {
+  await loadBlockedDays();
   renderCalendar();
   renderTimeSlots();
+}
+init();
 </script>
 </body>
 </html>
