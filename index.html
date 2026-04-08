@@ -383,54 +383,70 @@ const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 A
 /* ════════════════════════════════════════════════
    FIXED DATA LOADER
 ════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   DIAGNOSTIC DATA LOADER
+════════════════════════════════════════════════ */
 async function loadBlockedDays() {
-    console.log('Searching for blocked days...');
+    console.log('1. [START] loadBlockedDays function triggered.');
+
     try {
         let attempts = 0;
-        // INCREASED TO 40 ATTEMPTS (8 seconds) to be safe
-        while ((!window._db || !window._doc || !window._getDoc) && attempts < 40) {
+        console.log('2. [WAIT] Checking for Firebase variables (_db, _doc)...');
+        
+        while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
             attempts++;
+            if (attempts % 5 === 0) console.log(`   ...still waiting (Attempt ${attempts}/30)`);
             await new Promise(r => setTimeout(r, 200));
         }
 
         if (!window._db) {
-            console.error("Firebase failed to load in time.");
+            console.error('3. [FAIL] Firebase (_db) never became available. Check your Firebase script tags.');
             return;
         }
 
+        console.log('4. [QUERY] Firebase found! Attempting to fetch document: settings/availability');
         const docRef = window._doc(window._db, 'settings', 'availability');
         const snap = await window._getDoc(docRef);
 
+        if (!snap) {
+            console.error('5. [FAIL] Snap is null. This usually means a connection or permission error.');
+            return;
+        }
+
         if (snap.exists()) {
             const data = snap.data();
-            console.log('RAW DATA FROM FIREBASE:', data); // <--- Check your console for this!
+            console.log('6. [SUCCESS] Document Found! Raw Data:', data);
             
             if (data && data.offDays) {
-                // Attach to window so the console can always find it
                 window.blockedDays = new Set(data.offDays);
-                console.log('✅ Success! Blocked Days:', Array.from(window.blockedDays));
+                console.log('7. [FINAL] Blocked Days set updated:', Array.from(window.blockedDays));
             } else {
-                console.warn('Document found, but "offDays" field is missing/empty.');
+                console.warn('7. [WARN] Document exists but "offDays" field is missing.');
                 window.blockedDays = new Set();
             }
         } else {
-            console.error('❌ No "availability" document found at settings/availability');
+            console.error('6. [FAIL] Document does not exist at path: settings/availability');
             window.blockedDays = new Set();
         }
+
     } catch (e) {
-        console.error('❌ loadBlockedDays Error:', e);
-        window.blockedDays = new Set();
+        console.error('❌ [CRASH] loadBlockedDays encountered an error:', e);
     }
 
-    // Force the calendar to draw with whatever data we found
-    if (typeof drawCal === 'function') drawCal();
+    // Attempt to refresh the UI
+    if (typeof drawCal === 'function') {
+        console.log('8. [RENDER] Calling drawCal()...');
+        drawCal();
+    } else {
+        console.error('8. [RENDER FAIL] drawCal function not found!');
+    }
 }
 
-async function init() {
-    await loadBlockedDays();
-}
-
-window.onload = init;
+// Use addEventListener instead of window.onload to prevent conflicts
+window.addEventListener('load', () => {
+    console.log('0. [LOAD] Window load event fired.');
+    loadBlockedDays();
+});
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
