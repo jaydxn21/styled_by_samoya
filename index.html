@@ -380,44 +380,57 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
 /* LOAD BLOCKED DAYS - UPDATED to ensure global variable is set */
+/* ════════════════════════════════════════════════
+   FIXED DATA LOADER
+════════════════════════════════════════════════ */
 async function loadBlockedDays() {
-    console.log('=== loadBlockedDays START ===');
+    console.log('Searching for blocked days...');
     try {
         let attempts = 0;
-        while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
+        // INCREASED TO 40 ATTEMPTS (8 seconds) to be safe
+        while ((!window._db || !window._doc || !window._getDoc) && attempts < 40) {
             attempts++;
             await new Promise(r => setTimeout(r, 200));
         }
-        
-        if (!window._db || !window._doc || !window._getDoc) {
-            console.error("Firebase not ready after retries");
-            blockedDays = new Set();
-            renderCalendar();  // Still render even if no blocked days
-            renderTimeSlots();
+
+        if (!window._db) {
+            console.error("Firebase failed to load in time.");
             return;
         }
-        
+
         const docRef = window._doc(window._db, 'settings', 'availability');
         const snap = await window._getDoc(docRef);
-        
-        if (snap && snap.exists()) {
+
+        if (snap.exists()) {
             const data = snap.data();
-            blockedDays = new Set(data?.offDays || []);
-            console.log('✅ Blocked days loaded:', Array.from(blockedDays));
+            console.log('RAW DATA FROM FIREBASE:', data); // <--- Check your console for this!
+            
+            if (data && data.offDays) {
+                // Attach to window so the console can always find it
+                window.blockedDays = new Set(data.offDays);
+                console.log('✅ Success! Blocked Days:', Array.from(window.blockedDays));
+            } else {
+                console.warn('Document found, but "offDays" field is missing/empty.');
+                window.blockedDays = new Set();
+            }
         } else {
-            blockedDays = new Set();
-            console.log('No availability document found');
+            console.error('❌ No "availability" document found at settings/availability');
+            window.blockedDays = new Set();
         }
     } catch (e) {
-        console.error('❌ loadBlockedDays failed:', e);
-        blockedDays = new Set();
+        console.error('❌ loadBlockedDays Error:', e);
+        window.blockedDays = new Set();
     }
-    
-    // CRITICAL: Move render calls HERE, inside loadBlockedDays
-    console.log('Rendering calendar with', blockedDays.size, 'blocked days');
-    renderCalendar();
-    renderTimeSlots();
+
+    // Force the calendar to draw with whatever data we found
+    if (typeof drawCal === 'function') drawCal();
 }
+
+async function init() {
+    await loadBlockedDays();
+}
+
+window.onload = init;
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
