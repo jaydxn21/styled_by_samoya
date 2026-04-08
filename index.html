@@ -380,47 +380,31 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
 /* LOAD BLOCKED DAYS - UPDATED to ensure global variable is set */
+/* UPDATED LOAD BLOCKED DAYS */
 async function loadBlockedDays() {
-    console.log('=== loadBlockedDays START ===');
     try {
-        // Wait for Firebase
         let attempts = 0;
+        // Wait for Firebase components to be attached to window
         while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
             attempts++;
             await new Promise(r => setTimeout(r, 200));
         }
         
-        if (!window._db || !window._doc || !window._getDoc) {
-            console.error("Firebase not ready after retries");
-            window.blockedDays = new Set();
-            return;
-        }
-        
-        console.log('Firebase ready, fetching blocked days...');
+        if (!window._db) return new Set();
+
         const docRef = window._doc(window._db, 'settings', 'availability');
         const snap = await window._getDoc(docRef);
         
         if (snap && snap.exists()) {
             const data = snap.data();
             const offDaysArray = data?.offDays || [];
-            // IMPORTANT: Update the GLOBAL blockedDays
-            window.blockedDays = new Set(offDaysArray);
-            // Also update the local reference if it exists in the outer scope
-            if (typeof blockedDays !== 'undefined') {
-                blockedDays = window.blockedDays;
-            }
-            console.log('✅ Blocked days loaded:', Array.from(window.blockedDays));
-            console.log('Set size:', window.blockedDays.size);
-        } else {
-            console.log('No availability document found');
-            window.blockedDays = new Set();
+            // Return the set directly
+            return new Set(offDaysArray);
         }
     } catch (e) {
         console.error('❌ loadBlockedDays failed:', e);
-        window.blockedDays = new Set();
     }
-    
-    console.log('Final window.blockedDays size:', window.blockedDays.size);
+    return new Set();
 }
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
@@ -744,21 +728,22 @@ async function resetBooking() {
   renderTimeSlots();
 }
 
-/* INITIALIZATION - THIS IS THE KEY PART */
+/* UPDATED INIT */
 async function init() {
     console.log('🚀 INIT STARTING');
-    await loadBlockedDays();
-    console.log('After loadBlockedDays, blockedDays has:', Array.from(blockedDays));
+    
+    // 1. Fetch the data and WAIT for it
+    const fetchedDays = await loadBlockedDays();
+    
+    // 2. Update both the local and window variable
+    window.blockedDays = fetchedDays;
+    blockedDays = fetchedDays; 
+    
+    console.log('✅ Data Loaded. Re-rendering calendar...');
+    
+    // 3. Trigger the render AFTER the data is confirmed
     renderCalendar();
     renderTimeSlots();
-    console.log('✅ INIT COMPLETE');
-}
-
-// Make sure init runs after DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
 }
 </script>
 </body>
