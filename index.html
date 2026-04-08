@@ -127,7 +127,7 @@
   .cal-day.past{color:#d0b0bc;cursor:default;}
   .cal-day.empty{cursor:default;}
   /* Blocked days from dashboard */
-  .cal-day.blocked{text-decoration:line-through;opacity:0.3;cursor:not-allowed;}
+  .cal-day.blocked{text-decoration:line-through;opacity:0.3;cursor:not-allowed;background:#f5f5f5;}
 
   /* TIME SLOTS */
   .time-label{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--dark);margin-bottom:18px;}
@@ -369,20 +369,18 @@
 <script>
 /* ═══════════════════════════════════════════════════
    CONFIGURATION
-   FIX: to_email passed dynamically → set template
-   "To Email" field to {{to_email}} in EmailJS
 ═══════════════════════════════════════════════════ */
 const CFG = {
   emailjs: {
     publicKey:  'WhFkp6kOSjf5xoeTP',
     serviceId:  'service_tbvgs6i',
     templateId: 'template_hvnh11q',
-    ownerEmail: 'crownedsamoya@gmail.com',  // ← receives bookings
+    ownerEmail: 'crownedsamoya@gmail.com',
   },
   ownerWA: '16582175024',
 };
 
-(function(){ try{ emailjs.init({ publicKey: CFG.emailjs.publicKey }); }catch(e){} })();
+(function(){ try{ emailjs.init({ publicKey: CFG.emailjs.publicKey }); } catch(e){} })();
 
 /* ═══════════════════════════════════════════════════
    STATE
@@ -396,14 +394,45 @@ const state = {
 // Blocked days loaded from Samoya's dashboard
 let blockedDays = new Set();
 
+/* ═══════════════════════════════════════════════════
+   LOAD BLOCKED DAYS FROM FIRESTORE (UPDATED to match Braids by Apple)
+═══════════════════════════════════════════════════ */
 async function loadBlockedDays() {
-  try {
-    if (!window._db || !window._doc || !window._getDoc) return;
-    const snap = await window._getDoc(
-      window._doc(window._db, 'settings', 'availability')
-    );
-    if (snap.exists()) blockedDays = new Set(snap.data().offDays || []);
-  } catch(e) { console.error('loadBlockedDays:', e); }
+    try {
+        // Retry a few times while firebase globals come up
+        let attempts = 0;
+        while ((!window._db || !window._doc || !window._getDoc) && attempts < 10) {
+            attempts++;
+            console.warn(`Firebase not ready yet (attempt ${attempts})`);
+            await new Promise(r => setTimeout(r, 150));
+        }
+        if (!window._db || !window._doc || !window._getDoc) {
+            console.error("Firebase still not ready after retries. Continuing without blocked days.");
+            blockedDays = new Set();
+            renderCalendar();
+            renderTimeSlots();
+            return;
+        }
+
+        const snap = await window._getDoc(
+            window._doc(window._db, 'settings', 'availability')
+        );
+
+        if (snap && snap.exists()) {
+            blockedDays = new Set((snap.data()?.offDays) || []);
+            console.log('✅ Blocked days loaded for Samoya:', Array.from(blockedDays));
+        } else {
+            blockedDays = new Set();
+            console.log('No availability document found for Samoya');
+        }
+    } catch (e) {
+        console.error('❌ loadBlockedDays failed:', e);
+        blockedDays = new Set();
+    }
+
+    // Always redraw after loading
+    renderCalendar();
+    renderTimeSlots();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -447,26 +476,34 @@ function goStep(n) {
 }
 
 /* ═══════════════════════════════════════════════════
-   CALENDAR — blocked days from dashboard applied
+   CALENDAR — UPDATED with proper blocked days handling
 ═══════════════════════════════════════════════════ */
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  
   document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
   const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
   grid.innerHTML = '';
   headers.forEach(h => grid.appendChild(h));
+  
   const first = new Date(state.calYear, state.calMonth, 1).getDay();
-  const total = new Date(state.calYear, state.calMonth+1, 0).getDate();
+  const total = new Date(state.calYear, state.calMonth + 1, 0).getDate();
   const today = new Date();
 
-  for (let i=0; i<first; i++) {
-    const el = document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el);
+  for (let i = 0; i < first; i++) {
+    const el = document.createElement('div'); 
+    el.className = 'cal-day empty'; 
+    grid.appendChild(el);
   }
-  for (let d=1; d<=total; d++) {
-    const el = document.createElement('div'); el.className='cal-day'; el.textContent=d;
-    const ds = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  
+  for (let d = 1; d <= total; d++) {
+    const el = document.createElement('div'); 
+    el.className = 'cal-day'; 
+    el.textContent = d;
+    const ds = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const thisDate = new Date(state.calYear, state.calMonth, d);
     const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -474,14 +511,20 @@ function renderCalendar() {
       el.classList.add('past');
     } else if (blockedDays.has(ds)) {
       // Samoya marked this day off in her dashboard
-      el.classList.add('past','blocked');
+      el.classList.add('past', 'blocked');
       el.title = 'Not available';
     } else {
-      if (d===today.getDate()&&state.calMonth===today.getMonth()&&state.calYear===today.getFullYear()) el.classList.add('today');
-      if (state.selectedDate===ds) el.classList.add('selected');
+      if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
+        el.classList.add('today');
+      }
+      if (state.selectedDate === ds) {
+        el.classList.add('selected');
+      }
       el.addEventListener('click', async () => {
-        state.selectedDate = ds; state.selectedTime = null;
-        renderCalendar(); await renderTimeSlots();
+        state.selectedDate = ds; 
+        state.selectedTime = null;
+        renderCalendar(); 
+        await renderTimeSlots();
       });
     }
     grid.appendChild(el);
@@ -490,8 +533,8 @@ function renderCalendar() {
 
 function changeMonth(dir) {
   state.calMonth += dir;
-  if (state.calMonth > 11) { state.calMonth=0; state.calYear++; }
-  if (state.calMonth < 0)  { state.calMonth=11; state.calYear--; }
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
   renderCalendar();
 }
 
@@ -502,16 +545,25 @@ const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 A
 
 async function renderTimeSlots() {
   const grid = document.getElementById('timeGrid');
+  if (!grid) return;
+  
   grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Loading times…</p>';
   if (!state.selectedDate) {
     grid.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;grid-column:1/-1;padding:10px 0;">Select a date first.</p>';
     return;
   }
+  
   let takenSlots = [];
   try {
     if (window._db && window._query && window._getDocs) {
-      const dateLabel = new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-      const q = window._query(window._collection(window._db,'bookings'),window._where('date','==',dateLabel),window._where('status','==','accepted'));
+      const dateLabel = new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const q = window._query(
+        window._collection(window._db, 'bookings'),
+        window._where('date', '==', dateLabel),
+        window._where('status', '==', 'accepted')
+      );
       const snap = await window._getDocs(q);
       snap.forEach(d => takenSlots.push(d.data().time));
     }
@@ -521,9 +573,14 @@ async function renderTimeSlots() {
   ALL_SLOTS.forEach(slot => {
     const el = document.createElement('div');
     const taken = takenSlots.includes(slot);
-    el.className = 'time-slot' + (taken?' unavailable':'') + (state.selectedTime===slot?' selected':'');
+    el.className = 'time-slot' + (taken ? ' unavailable' : '') + (state.selectedTime === slot ? ' selected' : '');
     el.innerHTML = taken ? `${slot}<br><small style="font-size:0.65rem;opacity:0.7;">Booked</small>` : slot;
-    if (!taken) el.addEventListener('click', () => { state.selectedTime=slot; renderTimeSlots(); });
+    if (!taken) {
+      el.addEventListener('click', () => { 
+        state.selectedTime = slot; 
+        renderTimeSlots(); 
+      });
+    }
     grid.appendChild(el);
   });
 }
@@ -543,22 +600,26 @@ function fillSummary() {
   const fname = document.getElementById('fname').value.trim();
   const lname = document.getElementById('lname').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  const length= document.getElementById('hairLength').value;
+  const length = document.getElementById('hairLength').value;
   const notes = document.getElementById('notes').value.trim();
-  document.getElementById('sum-service').textContent   = state.service||'—';
-  document.getElementById('sum-time').textContent      = state.selectedTime||'—';
-  document.getElementById('sum-name').textContent      = [fname,lname].filter(Boolean).join(' ')||'—';
-  document.getElementById('sum-contact').textContent   = phone||'—';
-  document.getElementById('sum-length').textContent    = length||'—';
-  document.getElementById('sum-housecall').textContent = state.houseCall?'✓ Yes, please':'No';
+  
+  document.getElementById('sum-service').textContent = state.service || '—';
+  document.getElementById('sum-time').textContent = state.selectedTime || '—';
+  document.getElementById('sum-name').textContent = [fname, lname].filter(Boolean).join(' ') || '—';
+  document.getElementById('sum-contact').textContent = phone || '—';
+  document.getElementById('sum-length').textContent = length || '—';
+  document.getElementById('sum-housecall').textContent = state.houseCall ? '✓ Yes, please' : 'No';
+  
   if (state.selectedDate) {
-    document.getElementById('sum-date').textContent = new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('sum-date').textContent = new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
   }
   if (notes) {
-    document.getElementById('sum-notes-row').style.display='block';
-    document.getElementById('sum-notes').textContent=notes;
+    document.getElementById('sum-notes-row').style.display = 'block';
+    document.getElementById('sum-notes').textContent = notes;
   } else {
-    document.getElementById('sum-notes-row').style.display='none';
+    document.getElementById('sum-notes-row').style.display = 'none';
   }
 }
 
@@ -570,20 +631,31 @@ async function confirmBooking() {
   const lname = document.getElementById('lname').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
-  const length= document.getElementById('hairLength').value;
+  const length = document.getElementById('hairLength').value;
   const notes = document.getElementById('notes').value.trim();
-  const name  = [fname,lname].filter(Boolean).join(' ');
-  const ref   = 'CBS-' + Math.floor(100000 + Math.random()*900000);
+  const name = [fname, lname].filter(Boolean).join(' ');
+  const ref = 'CBS-' + Math.floor(100000 + Math.random() * 900000);
   const dateLabel = state.selectedDate
-    ? new Date(state.selectedDate+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      })
     : '—';
 
   /* Double-check slot isn't taken */
   try {
     if (window._db) {
-      const q = window._query(window._collection(window._db,'bookings'),window._where('date','==',dateLabel),window._where('time','==',state.selectedTime),window._where('status','==','accepted'));
+      const q = window._query(
+        window._collection(window._db, 'bookings'),
+        window._where('date', '==', dateLabel),
+        window._where('time', '==', state.selectedTime),
+        window._where('status', '==', 'accepted')
+      );
       const snap = await window._getDocs(q);
-      if (!snap.empty) { alert('Sorry, this time slot was just taken. Please select a different time.'); goStep(2); return; }
+      if (!snap.empty) { 
+        alert('Sorry, this time slot was just taken. Please select a different time.'); 
+        goStep(2); 
+        return; 
+      }
     }
   } catch(e) {}
 
@@ -592,54 +664,52 @@ async function confirmBooking() {
   document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('stepProgress').style.display = 'none';
   document.getElementById('successPanel').classList.add('show');
-  window.scrollTo({ top: document.getElementById('booking').offsetTop-20, behavior:'smooth' });
-  showBadge('sending','⏳ Sending booking to Samoya…');
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior: 'smooth' });
+  showBadge('sending', '⏳ Sending booking to Samoya…');
 
   const booking = {
-    ref, clientName:name, phone, email,
-    service:state.service, date:dateLabel, rawDate:state.selectedDate,
-    time:state.selectedTime, hairLength:length||'—',
-    houseCall:state.houseCall?'Yes':'No', notes:notes||'None',
-    status:'pending', createdAt:new Date().toISOString(),
+    ref, clientName: name, phone, email,
+    service: state.service, date: dateLabel, rawDate: state.selectedDate,
+    time: state.selectedTime, hairLength: length || '—',
+    houseCall: state.houseCall ? 'Yes' : 'No', notes: notes || 'None',
+    status: 'pending', createdAt: new Date().toISOString(),
   };
 
   /* 1 — Firestore */
   let docId = null, firestoreOk = false;
   try {
     if (window._db && window._addDoc && window._collection) {
-      const ref2 = await window._addDoc(window._collection(window._db,'bookings'), booking);
-      docId = ref2.id; firestoreOk = true;
+      const ref2 = await window._addDoc(window._collection(window._db, 'bookings'), booking);
+      docId = ref2.id; 
+      firestoreOk = true;
     }
   } catch(e) { console.error('Firestore:', e); }
 
-  /* 2 — EmailJS
-     FIX: to_email passed as variable. Set template "To Email" to {{to_email}}
-     FIX: client_phone passed explicitly
-  */
+  /* 2 — EmailJS */
   let emailOk = false;
   try {
     await emailjs.send(CFG.emailjs.serviceId, CFG.emailjs.templateId, {
-      to_email:     CFG.emailjs.ownerEmail,
-      booking_id:   docId||'—',
+      to_email: CFG.emailjs.ownerEmail,
+      booking_id: docId || '—',
       ref,
-      client_name:  name,
+      client_name: name,
       client_phone: phone,
-      email:        email||'Not provided',
-      service:      state.service,
-      date:         dateLabel,
-      time:         state.selectedTime,
-      hair_length:  length||'—',
-      house_call:   state.houseCall?'Yes':'No',
-      notes:        notes||'None',
+      email: email || 'Not provided',
+      service: state.service,
+      date: dateLabel,
+      time: state.selectedTime,
+      hair_length: length || '—',
+      house_call: state.houseCall ? 'Yes' : 'No',
+      notes: notes || 'None',
     });
     emailOk = true;
   } catch(e) { console.error('EmailJS:', e); }
 
   /* 3 — Result */
   if (firestoreOk || emailOk) {
-    showBadge('success', `✅ Booking logged${firestoreOk?' in system':''}${emailOk?' & email sent to Samoya':''}. She will contact you to confirm shortly.`);
+    showBadge('success', `✅ Booking logged${firestoreOk ? ' in system' : ''}${emailOk ? ' & email sent to Samoya' : ''}. She will contact you to confirm shortly.`);
   } else {
-    showBadge('fallback','⚠️ Could not send automatically. Use the button below to notify Samoya via WhatsApp.');
+    showBadge('fallback', '⚠️ Could not send automatically. Use the button below to notify Samoya via WhatsApp.');
     const msg = buildWAMsg(ref, name, phone, dateLabel, length, notes);
     document.getElementById('waLink').href = `https://wa.me/${CFG.ownerWA}?text=${msg}`;
     document.getElementById('waFallback').style.display = 'block';
@@ -657,9 +727,9 @@ function buildWAMsg(ref, name, phone, dateLabel, length, notes) {
 ✂️ Service: ${state.service}
 📅 Date: ${dateLabel}
 🕐 Time: ${state.selectedTime}
-💇 Length: ${length||'—'}
-🏠 House Call: ${state.houseCall?'Yes':'No'}
-📝 Notes: ${notes||'None'}
+💇 Length: ${length || '—'}
+🏠 House Call: ${state.houseCall ? 'Yes' : 'No'}
+📝 Notes: ${notes || 'None'}
 ━━━━━━━━━━━━━━━━━━
 Please confirm this appointment.`);
 }
@@ -674,25 +744,33 @@ function showBadge(type, msg) {
 /* ═══════════════════════════════════════════════════
    RESET
 ═══════════════════════════════════════════════════ */
-function resetBooking() {
-  state.service=null; state.selectedDate=null; state.selectedTime=null;
-  state.houseCall=false; state.currentStep=1;
-  state.calMonth=new Date().getMonth(); state.calYear=new Date().getFullYear();
+async function resetBooking() {
+  state.service = null; 
+  state.selectedDate = null; 
+  state.selectedTime = null;
+  state.houseCall = false; 
+  state.currentStep = 1;
+  state.calMonth = new Date().getMonth(); 
+  state.calYear = new Date().getFullYear();
+  
   document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-  ['fname','lname','phone','email','notes'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('hairLength').value=''; document.getElementById('referral').value='';
+  ['fname', 'lname', 'phone', 'email', 'notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('hairLength').value = ''; 
+  document.getElementById('referral').value = '';
   document.getElementById('houseToggle').classList.remove('on');
   document.getElementById('successPanel').classList.remove('show');
-  document.getElementById('stepProgress').style.display='flex';
-  document.getElementById('waFallback').style.display='none';
-  document.getElementById('notifyBadge').style.display='none';
+  document.getElementById('stepProgress').style.display = 'flex';
+  document.getElementById('waFallback').style.display = 'none';
+  document.getElementById('notifyBadge').style.display = 'none';
+  
   document.querySelectorAll('.step-item').forEach(item => {
-    item.classList.remove('active','done');
-    if (item.dataset.step==='1') item.classList.add('active');
+    item.classList.remove('active', 'done');
+    if (item.dataset.step === '1') item.classList.add('active');
   });
-  ['conn1','conn2','conn3'].forEach(id => document.getElementById(id).classList.remove('done'));
+  ['conn1', 'conn2', 'conn3'].forEach(id => document.getElementById(id).classList.remove('done'));
   document.getElementById('step1').classList.add('active');
-  renderCalendar(); renderTimeSlots();
+  
+  await loadBlockedDays();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -700,8 +778,6 @@ function resetBooking() {
 ═══════════════════════════════════════════════════ */
 async function init() {
   await loadBlockedDays();
-  renderCalendar();
-  renderTimeSlots();
 }
 init();
 </script>
