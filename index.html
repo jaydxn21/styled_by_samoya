@@ -387,11 +387,7 @@ const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 A
 /* ════════════════════════════════════════════════
    DIAGNOSTIC DATA LOADER
 ════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════
-   SAMOYA DATA LOADER - BULLETPROOF VERSION
-   ───────────────────────────────────────────── */
 async function loadBlockedDays() {
-    console.log('--- loadBlockedDays Start ---');
     try {
         let attempts = 0;
         while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
@@ -401,34 +397,30 @@ async function loadBlockedDays() {
         
         if (!window._db) return;
 
-        const docRef = window._doc(window._db, 'settings', 'availability');
-        const snap = await window._getDoc(docRef);
+        const snap = await window._getDoc(window._doc(window._db, 'settings', 'availability'));
 
         if (snap.exists()) {
             const data = snap.data();
-            const offDaysArray = data.offDays || [];
+            // DIRECTLY update the window object that renderCalendar uses
+            window.blockedDays = new Set(data.offDays || []);
             
-            // 1. Update the local variable (without using 'let' or 'const')
-            blockedDays = new Set(offDaysArray);
+            console.log('✅ UI SYNCED. Dates in Set:', Array.from(window.blockedDays));
             
-            // 2. Update the window object as a backup safety
-            window.blockedDays = blockedDays;
-            
-            console.log('✅ DATABASE SYNCED. Dates:', offDaysArray);
+            // Re-run the calendar draw now that data is here
+            renderCalendar(); 
         }
     } catch (e) {
-        console.error('❌ loadBlockedDays error:', e);
-    }
-
-    // 3. Trigger the UI Redraw
-    if (typeof renderCalendar === 'function') {
-        console.log('🎨 Re-rendering Calendar now...');
-        renderCalendar(); 
+        console.error('❌ Fetch failed:', e);
     }
 }
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
+
+  // Sync the local blockedDays with window.blockedDays
+if (window.blockedDays) {
+    blockedDays = window.blockedDays;
+}
   const grid = document.getElementById('calGrid');
   if (!grid) return;
   
