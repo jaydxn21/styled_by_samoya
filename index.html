@@ -782,6 +782,8 @@ async function resetBooking() {
 ═══════════════════════════════════════════════════ */
 async function init() {
   await loadBlockedDays();
+  renderCalendar();
+  renderTimeSlots();
 }
 init();
 </script>
