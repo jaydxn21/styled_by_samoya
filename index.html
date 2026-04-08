@@ -751,6 +751,44 @@ async function init() {
     await loadBlockedDays();  // loadBlockedDays now handles rendering
     console.log('✅ INIT COMPLETE');
 }
+
+// Make sure loadBlockedDays runs and completes BEFORE renderCalendar
+(async function() {
+    console.log('🚀 Auto-initializing...');
+    
+    // Wait for Firebase
+    let attempts = 0;
+    while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
+        attempts++;
+        await new Promise(r => setTimeout(r, 200));
+    }
+    
+    if (window._db && window._doc && window._getDoc) {
+        try {
+            const snap = await window._getDoc(window._doc(window._db, 'settings', 'availability'));
+            if (snap.exists()) {
+                window.blockedDays = new Set(snap.data().offDays || []);
+                blockedDays = window.blockedDays;
+                console.log('✅ Auto-loaded blocked days:', Array.from(blockedDays));
+            } else {
+                window.blockedDays = new Set();
+                blockedDays = window.blockedDays;
+            }
+        } catch (e) {
+            console.error('Error auto-loading blocked days:', e);
+            window.blockedDays = window.blockedDays || new Set();
+            blockedDays = window.blockedDays;
+        }
+        
+        // Now render the calendar with the loaded blocked days
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof renderTimeSlots === 'function') renderTimeSlots();
+    } else {
+        console.error('Firebase not available');
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof renderTimeSlots === 'function') renderTimeSlots();
+    }
+})();
 </script>
 </body>
 </html>
