@@ -398,41 +398,45 @@ let blockedDays = new Set();
    LOAD BLOCKED DAYS FROM FIRESTORE (UPDATED to match Braids by Apple)
 ═══════════════════════════════════════════════════ */
 async function loadBlockedDays() {
+    console.log('loadBlockedDays starting...');
     try {
-        // retry a few times while firebase globals come up
+        // Wait for Firebase
         let attempts = 0;
-        while ((!window._db || !window._doc || !window._getDoc) && attempts < 10) {
+        while ((!window._db || !window._doc || !window._getDoc) && attempts < 20) {
             attempts++;
-            console.warn(`Firebase not ready yet (attempt ${attempts})`);
-            await new Promise(r => setTimeout(r, 150));
+            await new Promise(r => setTimeout(r, 200));
         }
+        
         if (!window._db || !window._doc || !window._getDoc) {
-            console.error("Firebase still not ready after retries. Continuing without blocked days.");
+            console.error("Firebase not ready after retries");
             blockedDays = new Set();
-            drawCal();
-            drawTimes();
             return;
         }
-
-        const snap = await window._getDoc(
-            window._doc(window._db, 'settings', 'availability')
-        );
-
-        if (snap && snap.exists && snap.exists()) {
-            blockedDays = new Set((snap.data && snap.data().offDays) || []);
+        
+        const docRef = window._doc(window._db, 'settings', 'availability');
+        const snap = await window._getDoc(docRef);
+        
+        if (snap && snap.exists()) {
+            const offDaysArray = snap.data()?.offDays || [];
+            blockedDays = new Set(offDaysArray);
             console.log('✅ Blocked days loaded:', Array.from(blockedDays));
+            console.log('Set size:', blockedDays.size);
         } else {
-            blockedDays = new Set();
             console.log('No availability document found');
+            blockedDays = new Set();
         }
     } catch (e) {
         console.error('❌ loadBlockedDays failed:', e);
         blockedDays = new Set();
     }
-
-    // Always redraw after loading (this fixes most cases)
-    drawCal();
-    drawTimes();
+    
+    // Force calendar redraw
+    if (typeof renderCalendar === 'function') {
+        renderCalendar();
+    }
+    if (typeof renderTimeSlots === 'function') {
+        renderTimeSlots();
+    }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -781,12 +785,19 @@ async function resetBooking() {
    INIT — load blocked days first then render
 ═══════════════════════════════════════════════════ */
 async function init() {
-    console.log('Init starting...');
+    console.log('=== INIT STARTING ===');
     await loadBlockedDays();
     console.log('After loadBlockedDays, blockedDays size:', blockedDays.size);
-    // renderCalendar and renderTimeSlots are called inside loadBlockedDays
+    // renderCalendar and renderTimeSlots are already called inside loadBlockedDays
+    console.log('=== INIT COMPLETE ===');
 }
-init();
+
+// Make sure init runs after everything is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
 </body>
 </html>
