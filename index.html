@@ -399,7 +399,7 @@ let blockedDays = new Set();
 ═══════════════════════════════════════════════════ */
 async function loadBlockedDays() {
     try {
-        // Retry a few times while firebase globals come up
+        // retry a few times while firebase globals come up
         let attempts = 0;
         while ((!window._db || !window._doc || !window._getDoc) && attempts < 10) {
             attempts++;
@@ -409,8 +409,8 @@ async function loadBlockedDays() {
         if (!window._db || !window._doc || !window._getDoc) {
             console.error("Firebase still not ready after retries. Continuing without blocked days.");
             blockedDays = new Set();
-            renderCalendar();
-            renderTimeSlots();
+            drawCal();
+            drawTimes();
             return;
         }
 
@@ -418,21 +418,21 @@ async function loadBlockedDays() {
             window._doc(window._db, 'settings', 'availability')
         );
 
-        if (snap && snap.exists()) {
-            blockedDays = new Set((snap.data()?.offDays) || []);
-            console.log('✅ Blocked days loaded for Samoya:', Array.from(blockedDays));
+        if (snap && snap.exists && snap.exists()) {
+            blockedDays = new Set((snap.data && snap.data().offDays) || []);
+            console.log('✅ Blocked days loaded:', Array.from(blockedDays));
         } else {
             blockedDays = new Set();
-            console.log('No availability document found for Samoya');
+            console.log('No availability document found');
         }
     } catch (e) {
         console.error('❌ loadBlockedDays failed:', e);
         blockedDays = new Set();
     }
 
-    // Always redraw after loading
-    renderCalendar();
-    renderTimeSlots();
+    // Always redraw after loading (this fixes most cases)
+    drawCal();
+    drawTimes();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -781,9 +781,10 @@ async function resetBooking() {
    INIT — load blocked days first then render
 ═══════════════════════════════════════════════════ */
 async function init() {
-  await loadBlockedDays();
-  renderCalendar();
-  renderTimeSlots();
+    console.log('Init starting...');
+    await loadBlockedDays();
+    console.log('After loadBlockedDays, blockedDays size:', blockedDays.size);
+    // renderCalendar and renderTimeSlots are called inside loadBlockedDays
 }
 init();
 </script>
