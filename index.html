@@ -354,7 +354,8 @@
 </footer>
 
 <script>
-/* CONFIGURATION */
+  window.blockedDays = new Set();
+  /* CONFIGURATION */
 const CFG = {
   emailjs: {
     publicKey:  'WhFkp6kOSjf5xoeTP',
@@ -375,10 +376,10 @@ const state = {
 };
 
 // Make sure blockedDays is GLOBAL and accessible
-let blockedDays = new Set();
+ // Make sure blockedDays is GLOBAL and accessible
+let blockedDays = window.blockedDays || new Set();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
-
 /* LOAD BLOCKED DAYS - UPDATED to ensure global variable is set */
 /* ════════════════════════════════════════════════
    FIXED DATA LOADER
