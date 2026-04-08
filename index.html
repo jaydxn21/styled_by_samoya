@@ -403,11 +403,16 @@ async function loadBlockedDays() {
             const data = snap.data();
             // DIRECTLY update the window object that renderCalendar uses
             window.blockedDays = new Set(data.offDays || []);
+            blockedDays = window.blockedDays;  // ← ensure local sync
             
             console.log('✅ UI SYNCED. Dates in Set:', Array.from(window.blockedDays));
             
             // Re-run the calendar draw now that data is here
             renderCalendar(); 
+        } else {
+            // Ensure globals are initialized even when doc missing
+            window.blockedDays = new Set();
+            blockedDays = window.blockedDays;
         }
     } catch (e) {
         console.error('❌ Fetch failed:', e);
