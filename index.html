@@ -393,7 +393,6 @@ async function loadBlockedDays() {
         if (!window._db || !window._doc || !window._getDoc) {
             console.error("Firebase not ready after retries");
             window.blockedDays = new Set();
-            blockedDays = new Set();
             return;
         }
         
@@ -404,31 +403,34 @@ async function loadBlockedDays() {
         if (snap && snap.exists()) {
             const data = snap.data();
             const offDaysArray = data?.offDays || [];
-            // Update BOTH global references
+            // IMPORTANT: Update the GLOBAL blockedDays
             window.blockedDays = new Set(offDaysArray);
-            blockedDays = new Set(offDaysArray);
-            console.log('✅ Blocked days loaded:', Array.from(blockedDays));
-            console.log('Set size:', blockedDays.size);
+            // Also update the local reference if it exists in the outer scope
+            if (typeof blockedDays !== 'undefined') {
+                blockedDays = window.blockedDays;
+            }
+            console.log('✅ Blocked days loaded:', Array.from(window.blockedDays));
+            console.log('Set size:', window.blockedDays.size);
         } else {
             console.log('No availability document found');
             window.blockedDays = new Set();
-            blockedDays = new Set();
         }
     } catch (e) {
         console.error('❌ loadBlockedDays failed:', e);
         window.blockedDays = new Set();
-        blockedDays = new Set();
     }
     
-    console.log('Final blockedDays size:', blockedDays.size);
+    console.log('Final window.blockedDays size:', window.blockedDays.size);
 }
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
-  console.log('🎨 renderCalendar START - blockedDays size:', blockedDays.size);
-  
   const grid = document.getElementById('calGrid');
   if (!grid) return;
+  
+  // Use window.blockedDays instead of blockedDays
+  const currentBlockedDays = window.blockedDays || new Set();
+  console.log('🎨 renderCalendar - blockedDays size:', currentBlockedDays.size);
   
   document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
   const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
@@ -439,14 +441,12 @@ function renderCalendar() {
   const total = new Date(state.calYear, state.calMonth + 1, 0).getDate();
   const today = new Date();
 
-  // Add empty cells for days before month starts
   for (let i = 0; i < first; i++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day empty'; 
     grid.appendChild(el);
   }
   
-  // Add actual days
   for (let d = 1; d <= total; d++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day'; 
@@ -455,8 +455,7 @@ function renderCalendar() {
     const thisDate = new Date(state.calYear, state.calMonth, d);
     const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    // Check if this date is blocked
-    const isBlocked = blockedDays.has(ds);
+    const isBlocked = currentBlockedDays.has(ds);
     
     if (isBlocked && !isPast) {
       console.log(`🚫 BLOCKING: ${ds}`);
@@ -483,7 +482,6 @@ function renderCalendar() {
     }
     grid.appendChild(el);
   }
-  console.log('🎨 renderCalendar COMPLETE');
 }
 
 function changeMonth(dir) {
