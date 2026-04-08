@@ -374,11 +374,12 @@ const state = {
   calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
 };
 
+// Make sure blockedDays is GLOBAL and accessible
 let blockedDays = new Set();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
-/* LOAD BLOCKED DAYS - FIXED VERSION */
+/* LOAD BLOCKED DAYS - UPDATED to ensure global variable is set */
 async function loadBlockedDays() {
     console.log('=== loadBlockedDays START ===');
     try {
@@ -386,12 +387,12 @@ async function loadBlockedDays() {
         let attempts = 0;
         while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
             attempts++;
-            console.log(`Waiting for Firebase... attempt ${attempts}`);
             await new Promise(r => setTimeout(r, 200));
         }
         
         if (!window._db || !window._doc || !window._getDoc) {
             console.error("Firebase not ready after retries");
+            window.blockedDays = new Set();
             blockedDays = new Set();
             return;
         }
@@ -400,31 +401,31 @@ async function loadBlockedDays() {
         const docRef = window._doc(window._db, 'settings', 'availability');
         const snap = await window._getDoc(docRef);
         
-        console.log('Document exists?', snap.exists());
-        
         if (snap && snap.exists()) {
             const data = snap.data();
-            console.log('Raw data from Firestore:', data);
             const offDaysArray = data?.offDays || [];
+            // Update BOTH global references
+            window.blockedDays = new Set(offDaysArray);
             blockedDays = new Set(offDaysArray);
             console.log('✅ Blocked days loaded:', Array.from(blockedDays));
             console.log('Set size:', blockedDays.size);
         } else {
             console.log('No availability document found');
+            window.blockedDays = new Set();
             blockedDays = new Set();
         }
     } catch (e) {
         console.error('❌ loadBlockedDays failed:', e);
+        window.blockedDays = new Set();
         blockedDays = new Set();
     }
     
     console.log('Final blockedDays size:', blockedDays.size);
-    console.log('=== loadBlockedDays END ===');
 }
 
-/* RENDER CALENDAR - WITH BLOCKED DAYS */
+/* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
-  console.log('renderCalendar called, blockedDays size:', blockedDays.size);
+  console.log('🎨 renderCalendar START - blockedDays size:', blockedDays.size);
   
   const grid = document.getElementById('calGrid');
   if (!grid) return;
@@ -438,12 +439,14 @@ function renderCalendar() {
   const total = new Date(state.calYear, state.calMonth + 1, 0).getDate();
   const today = new Date();
 
+  // Add empty cells for days before month starts
   for (let i = 0; i < first; i++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day empty'; 
     grid.appendChild(el);
   }
   
+  // Add actual days
   for (let d = 1; d <= total; d++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day'; 
@@ -455,18 +458,16 @@ function renderCalendar() {
     // Check if this date is blocked
     const isBlocked = blockedDays.has(ds);
     
-    if (isPast) {
-      el.classList.add('past');
-    } 
-    
     if (isBlocked && !isPast) {
+      console.log(`🚫 BLOCKING: ${ds}`);
       el.classList.add('blocked');
-      el.title = 'Not available - blocked in dashboard';
       el.style.textDecoration = 'line-through';
       el.style.opacity = '0.3';
       el.style.cursor = 'not-allowed';
-      console.log(`BLOCKED: ${ds}`);
-    } else if (!isPast && !isBlocked) {
+      el.title = 'Not available - blocked in dashboard';
+    } else if (isPast) {
+      el.classList.add('past');
+    } else {
       if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
         el.classList.add('today');
       }
@@ -482,6 +483,7 @@ function renderCalendar() {
     }
     grid.appendChild(el);
   }
+  console.log('🎨 renderCalendar COMPLETE');
 }
 
 function changeMonth(dir) {
@@ -603,6 +605,7 @@ function fillSummary() {
 }
 
 async function confirmBooking() {
+  // ... (keep your existing confirmBooking function)
   const fname = document.getElementById('fname').value.trim();
   const lname = document.getElementById('lname').value.trim();
   const phone = document.getElementById('phone').value.trim();
@@ -743,17 +746,22 @@ async function resetBooking() {
   renderTimeSlots();
 }
 
-/* INITIALIZATION */
+/* INITIALIZATION - THIS IS THE KEY PART */
 async function init() {
-    console.log('=== PAGE INIT STARTING ===');
+    console.log('🚀 INIT STARTING');
     await loadBlockedDays();
+    console.log('After loadBlockedDays, blockedDays has:', Array.from(blockedDays));
     renderCalendar();
     renderTimeSlots();
-    console.log('=== PAGE INIT COMPLETE ===');
+    console.log('✅ INIT COMPLETE');
 }
 
-// Start the app
-init();
+// Make sure init runs after DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
 </body>
 </html>
