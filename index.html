@@ -192,6 +192,51 @@
     .time-grid{grid-template-columns:repeat(2,1fr);}
   }
 </style>
+<script>
+// FORCE LOAD BLOCKED DAYS ON PAGE LOAD
+(async function() {
+    console.log('🔥 FORCE INIT - Loading blocked days...');
+    
+    // Wait for Firebase to be ready
+    let attempts = 0;
+    while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
+        attempts++;
+        await new Promise(r => setTimeout(r, 200));
+    }
+    
+    if (window._db && window._doc && window._getDoc) {
+        try {
+            const docRef = window._doc(window._db, 'settings', 'availability');
+            const snap = await window._getDoc(docRef);
+            
+            if (snap.exists()) {
+                const offDays = snap.data().offDays || [];
+                window.blockedDays = new Set(offDays);
+                // Also update the local variable if it exists
+                if (typeof blockedDays !== 'undefined') {
+                    blockedDays = window.blockedDays;
+                }
+                console.log('✅ LOADED BLOCKED DAYS:', Array.from(window.blockedDays));
+                
+                // Force calendar refresh
+                if (typeof renderCalendar === 'function') {
+                    renderCalendar();
+                }
+                if (typeof renderTimeSlots === 'function') {
+                    renderTimeSlots();
+                }
+            } else {
+                console.log('No blocked days found');
+                window.blockedDays = new Set();
+            }
+        } catch(e) {
+            console.error('Error loading blocked days:', e);
+        }
+    } else {
+        console.error('Firebase not ready');
+    }
+})();
+</script>
 </head>
 <body>
 
