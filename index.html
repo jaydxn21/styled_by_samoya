@@ -493,12 +493,14 @@ function renderCalendar() {
   const total = new Date(state.calYear, state.calMonth + 1, 0).getDate();
   const today = new Date();
 
+  // Add empty cells for days before month starts
   for (let i = 0; i < first; i++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day empty'; 
     grid.appendChild(el);
   }
   
+  // Add actual days
   for (let d = 1; d <= total; d++) {
     const el = document.createElement('div'); 
     el.className = 'cal-day'; 
@@ -510,9 +512,12 @@ function renderCalendar() {
     if (isPast) {
       el.classList.add('past');
     } else if (blockedDays.has(ds)) {
-      // Samoya marked this day off in her dashboard
+      // ⭐ THIS IS THE CRITICAL PART - Add blocked class
       el.classList.add('past', 'blocked');
       el.title = 'Not available';
+      el.style.textDecoration = 'line-through';
+      el.style.opacity = '0.3';
+      el.style.cursor = 'not-allowed';
     } else {
       if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
         el.classList.add('today');
@@ -530,7 +535,6 @@ function renderCalendar() {
     grid.appendChild(el);
   }
 }
-
 function changeMonth(dir) {
   state.calMonth += dir;
   if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
