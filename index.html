@@ -387,66 +387,35 @@ const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 A
    DIAGNOSTIC DATA LOADER
 ════════════════════════════════════════════════ */
 async function loadBlockedDays() {
-    console.log('1. [START] loadBlockedDays function triggered.');
-
     try {
         let attempts = 0;
-        console.log('2. [WAIT] Checking for Firebase variables (_db, _doc)...');
-        
         while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
             attempts++;
-            if (attempts % 5 === 0) console.log(`   ...still waiting (Attempt ${attempts}/30)`);
             await new Promise(r => setTimeout(r, 200));
         }
+        
+        if (!window._db) return;
 
-        if (!window._db) {
-            console.error('3. [FAIL] Firebase (_db) never became available. Check your Firebase script tags.');
-            return;
+        const snap = await window._getDoc(
+            window._doc(window._db, 'settings', 'availability')
+        );
+
+        if (snap && snap.exists()) {
+            // CRITICAL: No "let" or "const" here! Update the global variable.
+            blockedDays = new Set(snap.data().offDays || []);
+            console.log('✅ Blocked days synced to UI:', Array.from(blockedDays));
         }
-
-        console.log('4. [QUERY] Firebase found! Attempting to fetch document: settings/availability');
-        const docRef = window._doc(window._db, 'settings', 'availability');
-        const snap = await window._getDoc(docRef);
-
-        if (!snap) {
-            console.error('5. [FAIL] Snap is null. This usually means a connection or permission error.');
-            return;
-        }
-
-        if (snap.exists()) {
-            const data = snap.data();
-            console.log('6. [SUCCESS] Document Found! Raw Data:', data);
-            
-            if (data && data.offDays) {
-                window.blockedDays = new Set(data.offDays);
-                console.log('7. [FINAL] Blocked Days set updated:', Array.from(window.blockedDays));
-            } else {
-                console.warn('7. [WARN] Document exists but "offDays" field is missing.');
-                window.blockedDays = new Set();
-            }
-        } else {
-            console.error('6. [FAIL] Document does not exist at path: settings/availability');
-            window.blockedDays = new Set();
-        }
-
     } catch (e) {
-        console.error('❌ [CRASH] loadBlockedDays encountered an error:', e);
+        console.error('❌ loadBlockedDays failed:', e);
     }
 
-    // Attempt to refresh the UI
-    if (typeof drawCal === 'function') {
-        console.log('8. [RENDER] Calling drawCal()...');
+    // CRITICAL: Ensure this function name matches your calendar drawing function
+    if (typeof renderCalendar === 'function') {
+        renderCalendar(); 
+    } else if (typeof drawCal === 'function') {
         drawCal();
-    } else {
-        console.error('8. [RENDER FAIL] drawCal function not found!');
     }
 }
-
-// Use addEventListener instead of window.onload to prevent conflicts
-window.addEventListener('load', () => {
-    console.log('0. [LOAD] Window load event fired.');
-    loadBlockedDays();
-});
 
 /* RENDER CALENDAR - UPDATED to use the global blockedDays */
 function renderCalendar() {
