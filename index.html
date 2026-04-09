@@ -360,7 +360,7 @@ function listenToBlockedDays() {
 
   const ref = window._doc(window._db, 'settings', 'availability');
 
-  onSnapshot(ref, (snap) => {
+  window._onSnapshot(ref, (snap) => {
     if (snap.exists()) {
       const rawDays = snap.data().offDays || [];
 
