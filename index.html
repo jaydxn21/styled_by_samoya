@@ -356,13 +356,11 @@ const ALL_SLOTS = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM
 
 /* LISTEN TO BLOCKED DAYS IN REALTIME */
 function listenToBlockedDays() {
-  console.log('👂 Listening for blocked days (REALTIME)...');
   const ref = window._doc(window._db, 'settings', 'availability');
   window._onSnapshot(ref, (snap) => {
     if (snap.exists()) {
       const rawDays = snap.data().offDays || [];
       blockedDays = new Set(rawDays);
-      console.log('🔥 LIVE UPDATE blockedDays:', Array.from(blockedDays));
       renderCalendar();
       renderTimeSlots();
     } else {
@@ -401,7 +399,6 @@ function renderCalendar() {
     if (isPast) {
       el.classList.add('past');
     } else if (blockedDays.has(ds)) {
-      console.log(`🚫 Blocking: ${ds}`);
       el.classList.add('blocked');
       el.style.textDecoration = 'line-through';
       el.style.opacity = '0.3';
@@ -448,7 +445,6 @@ async function renderTimeSlots() {
   
   // 🔥 NEW: Auto-block day if all slots are taken
   if (takenSlots.length === ALL_SLOTS.length && ALL_SLOTS.length > 0) {
-    console.log(`📅 ${state.selectedDate} is FULLY BOOKED! Auto-blocking...`);
     // Option 1: Just show a message
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:20px;">📅 This day is fully booked. Please select another date.</p>';
     return;
@@ -536,7 +532,6 @@ async function confirmBooking() {
   try {
     if (window._db && window._addDoc) {
       await window._addDoc(window._collection(window._db, 'bookings'), booking);
-      console.log('Booking saved to Firestore');
     }
   } catch(e) { console.error('Firestore error:', e); }
 }
@@ -564,7 +559,6 @@ document.querySelectorAll('.service-card').forEach(card => {
 
 /* AUTO START */
 (async function autoStart() {
-  console.log('🚀 Auto-starting...');
   let attempts = 0;
   while (!window._db && attempts < 30) {
     await new Promise(r => setTimeout(r, 200));
@@ -574,7 +568,6 @@ document.querySelectorAll('.service-card').forEach(card => {
     listenToBlockedDays();
     renderCalendar();
     renderTimeSlots();
-    console.log('✅ Calendar ready');
   } else {
     renderCalendar();
   }
