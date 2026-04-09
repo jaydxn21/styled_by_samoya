@@ -731,20 +731,22 @@ function resetBooking() {
   renderCalendar(); renderTimeSlots();
 }
 
-/* ═══════════════════════════════════════════════════
-   INIT — guaranteed to run AFTER Firebase is ready.
-   The module script sets window._fbReady = true and
-   calls window._pendingInit(). We define it here so
-   it's waiting when the module finishes. If the module
-   already ran (unlikely but safe), call immediately.
-═══════════════════════════════════════════════════ */
-window._pendingInit = async function() {
-  await loadBlockedDays(); // sets blockedDays → calls renderCalendar()
-  renderTimeSlots();
-};
-
-// Fallback: module already ran before this script executed
-if (window._fbReady) window._pendingInit();
+// Remove the complex _pendingInit stuff and just do this:
+(async function() {
+    console.log('🚀 Starting app...');
+    
+    // Wait for Firebase
+    let attempts = 0;
+    while ((!window._db || !window._doc || !window._getDoc) && attempts < 30) {
+        attempts++;
+        await new Promise(r => setTimeout(r, 200));
+    }
+    
+    console.log('Firebase ready, loading blocked days...');
+    await loadBlockedDays();
+    console.log('Blocked days loaded, blockedDays size:', blockedDays.size);
+    renderTimeSlots();
+})();
 </script>
 </body>
 </html>
