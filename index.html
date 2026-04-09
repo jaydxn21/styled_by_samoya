@@ -354,21 +354,15 @@ let blockedDays = new Set();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
-/* LOAD BLOCKED DAYS - THIS WILL RUN AUTOMATICALLY */
+/* LISTEN TO BLOCKED DAYS IN REALTIME */
 function listenToBlockedDays() {
   console.log('👂 Listening for blocked days (REALTIME)...');
-
   const ref = window._doc(window._db, 'settings', 'availability');
-
   window._onSnapshot(ref, (snap) => {
     if (snap.exists()) {
       const rawDays = snap.data().offDays || [];
-
       blockedDays = new Set(rawDays);
-
       console.log('🔥 LIVE UPDATE blockedDays:', Array.from(blockedDays));
-
-      // 🔥 FORCE UI UPDATE
       renderCalendar();
       renderTimeSlots();
     } else {
@@ -380,7 +374,7 @@ function listenToBlockedDays() {
   });
 }
 
-/* RENDER CALENDAR */
+/* RENDER CALENDAR - FIXED (removed the orphaned if statement) */
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
   if (!grid) return;
@@ -414,18 +408,21 @@ function renderCalendar() {
       el.style.cursor = 'not-allowed';
       el.title = 'Not available';
     } else {
-      if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) el.classList.add('today');
-      if (state.selectedDate === ds) el.classList.add('selected');
+      if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
+        el.classList.add('today');
+      }
+      if (state.selectedDate === ds) {
+        el.classList.add('selected');
+      }
       el.addEventListener('click', async () => {
-        state.selectedDate = ds; state.selectedTime = null;
-        renderCalendar(); await renderTimeSlots();
+        state.selectedDate = ds; 
+        state.selectedTime = null;
+        renderCalendar(); 
+        await renderTimeSlots();
       });
     }
     grid.appendChild(el);
   }
-  if (blockedDays.has(ds)) {
-  console.log('🚫 MATCH FOUND:', ds);
-}
 }
 
 function changeMonth(dir) {
@@ -461,10 +458,29 @@ async function renderTimeSlots() {
 }
 
 function goStep(n) {
+  if (n > state.currentStep) {
+    if (state.currentStep === 1 && !state.service) { alert('Please select a service.'); return; }
+    if (state.currentStep === 2 && !state.selectedDate) { alert('Please select a date.'); return; }
+    if (state.currentStep === 2 && !state.selectedTime) { alert('Please select a time.'); return; }
+    if (state.currentStep === 3) {
+      if (!document.getElementById('fname').value.trim()) { alert('Please enter your name.'); return; }
+      if (!document.getElementById('phone').value.trim()) { alert('Please enter your phone number.'); return; }
+    }
+  }
   document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`step${n}`).classList.add('active');
+  document.querySelectorAll('.step-item').forEach(item => {
+    const s = parseInt(item.dataset.step);
+    item.classList.remove('active','done');
+    if (s < n) item.classList.add('done');
+    if (s === n) item.classList.add('active');
+  });
+  document.getElementById('conn1').classList.toggle('done', n > 1);
+  document.getElementById('conn2').classList.toggle('done', n > 2);
+  document.getElementById('conn3').classList.toggle('done', n > 3);
   state.currentStep = n;
   if (n === 4) fillSummary();
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior:'smooth' });
 }
 
 function toggleHouseCall() {
@@ -486,8 +502,35 @@ function fillSummary() {
 }
 
 async function confirmBooking() {
-  alert('Booking confirmed! Samoya will contact you.');
-  resetBooking();
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  const name = [fname, lname].filter(Boolean).join(' ');
+  const ref = 'CBS-' + Math.floor(100000 + Math.random() * 900000);
+  const dateLabel = state.selectedDate ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+  document.getElementById('bookingRef').textContent = ref;
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('stepProgress').style.display = 'none';
+  document.getElementById('successPanel').classList.add('show');
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior: 'smooth' });
+
+  const booking = {
+    ref, clientName: name, phone, email,
+    service: state.service, date: dateLabel, rawDate: state.selectedDate,
+    time: state.selectedTime,
+    houseCall: state.houseCall ? 'Yes' : 'No', notes: notes || 'None',
+    status: 'pending', createdAt: new Date().toISOString(),
+  };
+
+  try {
+    if (window._db && window._addDoc) {
+      await window._addDoc(window._collection(window._db, 'bookings'), booking);
+      console.log('Booking saved to Firestore');
+    }
+  } catch(e) { console.error('Firestore error:', e); }
 }
 
 function resetBooking() {
@@ -495,8 +538,9 @@ function resetBooking() {
   state.houseCall = false; state.currentStep = 1;
   state.calMonth = new Date().getMonth(); state.calYear = new Date().getFullYear();
   document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('step1').classList.add('active');
+  document.getElementById('stepProgress').style.display = 'flex';
   document.getElementById('successPanel').classList.remove('show');
+  document.getElementById('step1').classList.add('active');
   renderCalendar();
   renderTimeSlots();
 }
@@ -510,22 +554,19 @@ document.querySelectorAll('.service-card').forEach(card => {
   });
 });
 
-/* ===== AUTO START ===== */
+/* AUTO START */
 (async function autoStart() {
   console.log('🚀 Auto-starting...');
   let attempts = 0;
-
   while (!window._db && attempts < 30) {
     await new Promise(r => setTimeout(r, 200));
     attempts++;
   }
-
   if (window._db) {
     listenToBlockedDays();
-renderCalendar();
-renderTimeSlots();
-
-    console.log('✅ Calendar ready with', blockedDays.size, 'blocked days');
+    renderCalendar();
+    renderTimeSlots();
+    console.log('✅ Calendar ready');
   } else {
     renderCalendar();
   }
