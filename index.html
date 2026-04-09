@@ -352,7 +352,7 @@ const state = {
 
 let blockedDays = new Set();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
+const ALL_SLOTS = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
 /* LISTEN TO BLOCKED DAYS IN REALTIME */
 function listenToBlockedDays() {
@@ -445,6 +445,14 @@ async function renderTimeSlots() {
     const snap = await window._getDocs(q);
     snap.forEach(d => takenSlots.push(d.data().time));
   } catch(e) {}
+  
+  // 🔥 NEW: Auto-block day if all slots are taken
+  if (takenSlots.length === ALL_SLOTS.length && ALL_SLOTS.length > 0) {
+    console.log(`📅 ${state.selectedDate} is FULLY BOOKED! Auto-blocking...`);
+    // Option 1: Just show a message
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:20px;">📅 This day is fully booked. Please select another date.</p>';
+    return;
+  }
   
   grid.innerHTML = '';
   ALL_SLOTS.forEach(slot => {
