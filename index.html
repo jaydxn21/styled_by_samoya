@@ -7,19 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Dancing+Script:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-<!-- Firebase -->
+<!-- Firebase - Using Apple's project -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
   import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyAHtBCm6tUNye5OLd44FUBWrZuqflwecz8",
-    authDomain: "crownedbysamoya.firebaseapp.com",
-    projectId: "crownedbysamoya",
-    storageBucket: "crownedbysamoya.firebasestorage.app",
-    messagingSenderId: "734938479006",
-    appId: "1:734938479006:web:a8f09bd9e0d2dc40ac7e8f"
+    apiKey: "AIzaSyBlwJyWtLr34xsx2zSboACJM2Z7122yFBU",
+    authDomain: "braidsbyapple.firebaseapp.com",
+    projectId: "braidsbyapple",
+    storageBucket: "braidsbyapple.firebasestorage.app",
+    messagingSenderId: "466629260619",
+    appId: "1:466629260619:web:519ad77e37c924e66ea4ce"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -34,8 +34,7 @@
   window._doc        = doc;
   window._getDoc     = getDoc;
   
-  // Signal Firebase is ready
-  window.firebaseReady = true;
+  console.log('Firebase initialized (Apple project) for Samoya');
 </script>
 
 <style>
@@ -215,9 +214,6 @@
     <span>Knotless Braids</span><span>Cornrow Braids</span><span>Locs</span>
     <span>Curls</span><span>Multicolor</span><span>Male Hair</span><span>Kids Hair</span>
     <span>House Calls Available</span>
-    <span>Knotless Braids</span><span>Cornrow Braids</span><span>Locs</span>
-    <span>Curls</span><span>Multicolor</span><span>Male Hair</span><span>Kids Hair</span>
-    <span>House Calls Available</span>
   </div>
 </div>
 
@@ -236,6 +232,7 @@
     <div class="step-item" data-step="4"><div class="step-num">4</div><span class="step-label">Confirm</span></div>
   </div>
 
+  <!-- STEP 1 -->
   <div class="form-panel active" id="step1">
     <div class="service-grid">
       <div class="service-card" data-service="Knotless Braid"><div class="service-check"></div><div class="service-icon">💆‍♀️</div><div class="service-name">Knotless Braid</div><div class="service-desc">Natural-looking, tension-free braids.</div></div>
@@ -251,6 +248,7 @@
     </div>
   </div>
 
+  <!-- STEP 2 -->
   <div class="form-panel" id="step2">
     <div class="booking-row">
       <div class="cal-box">
@@ -277,6 +275,7 @@
     </div>
   </div>
 
+  <!-- STEP 3 -->
   <div class="form-panel" id="step3">
     <div class="contact-grid">
       <div class="field-group"><label>First Name *</label><input type="text" id="fname" /></div>
@@ -296,6 +295,7 @@
     </div>
   </div>
 
+  <!-- STEP 4 -->
   <div class="form-panel" id="step4">
     <div class="summary-card">
       <div class="summary-brand">✦ Crowned by Samoya</div>
@@ -314,6 +314,7 @@
     </div>
   </div>
 
+  <!-- SUCCESS -->
   <div class="success-panel" id="successPanel">
     <div class="success-icon">🌸</div>
     <h2>You're all booked!</h2>
@@ -332,14 +333,14 @@
 <footer>&copy; 2025 Crowned by Samoya</footer>
 
 <script>
-/* CONFIGURATION */
+// CONFIGURATION
 const CFG = {
   emailjs: { publicKey: 'WhFkp6kOSjf5xoeTP', serviceId: 'service_tbvgs6i', templateId: 'template_hvnh11q', ownerEmail: 'crownedsamoya@gmail.com' },
   ownerWA: '16582175024',
 };
 emailjs.init({ publicKey: CFG.emailjs.publicKey });
 
-/* STATE */
+// STATE
 const state = {
   service: null, selectedDate: null, selectedTime: null,
   houseCall: false, currentStep: 1,
@@ -350,9 +351,9 @@ let blockedDays = new Set();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
-/* LOAD BLOCKED DAYS - THIS WILL RUN AUTOMATICALLY */
+// LOAD BLOCKED DAYS
 async function loadBlockedDays() {
-  console.log('📅 Loading blocked days from Firebase...');
+  console.log('📅 Loading blocked days from Apple Firebase...');
   try {
     if (!window._db) {
       console.log('Waiting for Firebase...');
@@ -364,12 +365,14 @@ async function loadBlockedDays() {
       console.log('✅ Blocked days loaded:', Array.from(blockedDays));
       return true;
     }
-  } catch(e) { console.error('Error:', e); }
+  } catch(e) { 
+    console.error('Error loading blocked days:', e); 
+  }
   blockedDays = new Set();
   return false;
 }
 
-/* RENDER CALENDAR */
+// RENDER CALENDAR
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
   if (!grid) return;
@@ -446,11 +449,39 @@ async function renderTimeSlots() {
   });
 }
 
+// SERVICE CARDS
+document.querySelectorAll('.service-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state.service = card.dataset.service;
+  });
+});
+
 function goStep(n) {
+  if (n > state.currentStep) {
+    if (state.currentStep === 1 && !state.service) { alert('Please select a service.'); return; }
+    if (state.currentStep === 2 && !state.selectedDate) { alert('Please select a date.'); return; }
+    if (state.currentStep === 2 && !state.selectedTime) { alert('Please select a time.'); return; }
+    if (state.currentStep === 3) {
+      if (!document.getElementById('fname').value.trim()) { alert('Please enter your name.'); return; }
+      if (!document.getElementById('phone').value.trim()) { alert('Please enter your phone number.'); return; }
+    }
+  }
   document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`step${n}`).classList.add('active');
+  document.querySelectorAll('.step-item').forEach(item => {
+    const s = parseInt(item.dataset.step);
+    item.classList.remove('active','done');
+    if (s < n) item.classList.add('done');
+    if (s === n) item.classList.add('active');
+  });
+  document.getElementById('conn1').classList.toggle('done', n > 1);
+  document.getElementById('conn2').classList.toggle('done', n > 2);
+  document.getElementById('conn3').classList.toggle('done', n > 3);
   state.currentStep = n;
   if (n === 4) fillSummary();
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior:'smooth' });
 }
 
 function toggleHouseCall() {
@@ -472,8 +503,35 @@ function fillSummary() {
 }
 
 async function confirmBooking() {
-  alert('Booking confirmed! Samoya will contact you.');
-  resetBooking();
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  const name = [fname, lname].filter(Boolean).join(' ');
+  const ref = 'CBS-' + Math.floor(100000 + Math.random() * 900000);
+  const dateLabel = state.selectedDate ? new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-JM', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+  document.getElementById('bookingRef').textContent = ref;
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('stepProgress').style.display = 'none';
+  document.getElementById('successPanel').classList.add('show');
+  window.scrollTo({ top: document.getElementById('booking').offsetTop - 20, behavior: 'smooth' });
+
+  const booking = {
+    ref, clientName: name, phone, email,
+    service: state.service, date: dateLabel, rawDate: state.selectedDate,
+    time: state.selectedTime,
+    houseCall: state.houseCall ? 'Yes' : 'No', notes: notes || 'None',
+    status: 'pending', createdAt: new Date().toISOString(),
+  };
+
+  try {
+    if (window._db && window._addDoc) {
+      await window._addDoc(window._collection(window._db, 'bookings'), booking);
+      console.log('Booking saved to Firestore');
+    }
+  } catch(e) { console.error('Firestore error:', e); }
 }
 
 function resetBooking() {
@@ -481,37 +539,26 @@ function resetBooking() {
   state.houseCall = false; state.currentStep = 1;
   state.calMonth = new Date().getMonth(); state.calYear = new Date().getFullYear();
   document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('step1').classList.add('active');
+  document.getElementById('stepProgress').style.display = 'flex';
   document.getElementById('successPanel').classList.remove('show');
+  document.getElementById('step1').classList.add('active');
   renderCalendar();
   renderTimeSlots();
 }
 
-/* SERVICE CARDS */
-document.querySelectorAll('.service-card').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    state.service = card.dataset.service;
-  });
-});
-
-/* ===== THIS IS THE KEY - AUTO START ===== */
-(async function autoStart() {
-  console.log('🚀 Auto-starting...');
-  
-  // Wait for Firebase
+// AUTO START
+(async function() {
+  console.log('🚀 Starting Samoya booking page...');
   let attempts = 0;
   while (!window._db && attempts < 30) {
     await new Promise(r => setTimeout(r, 200));
     attempts++;
   }
-  
   if (window._db) {
     await loadBlockedDays();
     renderCalendar();
     renderTimeSlots();
-    console.log('✅ Calendar ready with', blockedDays.size, 'blocked days');
+    console.log('✅ Ready with', blockedDays.size, 'blocked days');
   } else {
     console.error('Firebase not loaded');
     renderCalendar();
