@@ -403,12 +403,14 @@ async function loadBlockedDays() {
     const snap = await window._getDoc(
       window._doc(window._db, 'settings', 'availability')
     );
+    // Update the GLOBAL blockedDays variable
     blockedDays = snap.exists() ? new Set(snap.data().offDays || []) : new Set();
+    console.log('✅ Loaded blocked days:', Array.from(blockedDays));
   } catch(e) {
     console.error('loadBlockedDays:', e);
     blockedDays = new Set();
   }
-  renderCalendar(); // always redraw with whatever blockedDays we have
+  renderCalendar(); // Now renderCalendar sees the updated blockedDays
 }
 
 /* ═══════════════════════════════════════════════════
@@ -458,35 +460,50 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  
   document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
   const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
   grid.innerHTML = '';
   headers.forEach(h => grid.appendChild(h));
+  
   const first = new Date(state.calYear, state.calMonth, 1).getDay();
-  const total = new Date(state.calYear, state.calMonth+1, 0).getDate();
+  const total = new Date(state.calYear, state.calMonth + 1, 0).getDate();
   const today = new Date();
 
-  for (let i=0; i<first; i++) {
-    const el = document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el);
+  for (let i = 0; i < first; i++) {
+    const el = document.createElement('div'); 
+    el.className = 'cal-day empty'; 
+    grid.appendChild(el);
   }
-  for (let d=1; d<=total; d++) {
-    const el = document.createElement('div'); el.className='cal-day'; el.textContent=d;
-    const ds = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  
+  for (let d = 1; d <= total; d++) {
+    const el = document.createElement('div'); 
+    el.className = 'cal-day'; 
+    el.textContent = d;
+    const ds = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const thisDate = new Date(state.calYear, state.calMonth, d);
     const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+    // THIS IS THE KEY - check blockedDays directly
     if (isPast) {
       el.classList.add('past');
     } else if (blockedDays.has(ds)) {
-      // Samoya marked this day off in her dashboard
-      el.classList.add('past','blocked');
-      el.title = 'Not available';
+      el.classList.add('past', 'blocked');
+      el.title = 'Not available - blocked';
+      console.log(`Blocked: ${ds}`); // Debug - see if this logs
     } else {
-      if (d===today.getDate()&&state.calMonth===today.getMonth()&&state.calYear===today.getFullYear()) el.classList.add('today');
-      if (state.selectedDate===ds) el.classList.add('selected');
+      if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
+        el.classList.add('today');
+      }
+      if (state.selectedDate === ds) {
+        el.classList.add('selected');
+      }
       el.addEventListener('click', async () => {
-        state.selectedDate = ds; state.selectedTime = null;
-        renderCalendar(); await renderTimeSlots();
+        state.selectedDate = ds; 
+        state.selectedTime = null;
+        renderCalendar(); 
+        await renderTimeSlots();
       });
     }
     grid.appendChild(el);
