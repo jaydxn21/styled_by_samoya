@@ -10,8 +10,10 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  import {
+  getFirestore, collection, addDoc, query, where, getDocs,
+  doc, getDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAHtBCm6tUNye5OLd44FUBWrZuqflwecz8",
@@ -351,35 +353,29 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const ALL_SLOTS = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
 
 /* LOAD BLOCKED DAYS - THIS WILL RUN AUTOMATICALLY */
-async function loadBlockedDays() {
-  console.log('📅 Loading blocked days from Firebase...');
-  try {
-    if (!window._db) return false;
+function listenToBlockedDays() {
+  console.log('👂 Listening for blocked days (REALTIME)...');
 
-    const snap = await window._getDoc(
-      window._doc(window._db, 'settings', 'availability')
-    );
+  const ref = window._doc(window._db, 'settings', 'availability');
 
+  onSnapshot(ref, (snap) => {
     if (snap.exists()) {
       const rawDays = snap.data().offDays || [];
 
-      // 🔥 NORMALIZE FORMAT HERE
-      blockedDays = new Set(
-        rawDays.map(d => {
-          const date = new Date(d);
-          return date.toISOString().split('T')[0]; // ALWAYS YYYY-MM-DD
-        })
-      );
+      blockedDays = new Set(rawDays);
 
-      console.log('✅ Normalized blocked days:', Array.from(blockedDays));
-      return true;
+      console.log('🔥 LIVE UPDATE blockedDays:', Array.from(blockedDays));
+
+      // 🔥 FORCE UI UPDATE
+      renderCalendar();
+      renderTimeSlots();
+    } else {
+      blockedDays = new Set();
+      renderCalendar();
     }
-  } catch(e) {
-    console.error('Error:', e);
-  }
-
-  blockedDays = new Set();
-  return false;
+  }, (error) => {
+    console.error('❌ Snapshot error:', error);
+  });
 }
 
 /* RENDER CALENDAR */
@@ -523,14 +519,9 @@ document.querySelectorAll('.service-card').forEach(card => {
   }
 
   if (window._db) {
-    await loadBlockedDays();
-
-    // 🔥 FORCE CLEAN RENDER
-    state.selectedDate = null;
-    state.selectedTime = null;
-
-    renderCalendar();
-    renderTimeSlots();
+    listenToBlockedDays();
+renderCalendar();
+renderTimeSlots();
 
     console.log('✅ Calendar ready with', blockedDays.size, 'blocked days');
   } else {
