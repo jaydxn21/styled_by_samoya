@@ -355,13 +355,29 @@ async function loadBlockedDays() {
   console.log('📅 Loading blocked days from Firebase...');
   try {
     if (!window._db) return false;
-    const snap = await window._getDoc(window._doc(window._db, 'settings', 'availability'));
+
+    const snap = await window._getDoc(
+      window._doc(window._db, 'settings', 'availability')
+    );
+
     if (snap.exists()) {
-      blockedDays = new Set(snap.data().offDays || []);
-      console.log('✅ Blocked days loaded:', Array.from(blockedDays));
+      const rawDays = snap.data().offDays || [];
+
+      // 🔥 NORMALIZE FORMAT HERE
+      blockedDays = new Set(
+        rawDays.map(d => {
+          const date = new Date(d);
+          return date.toISOString().split('T')[0]; // ALWAYS YYYY-MM-DD
+        })
+      );
+
+      console.log('✅ Normalized blocked days:', Array.from(blockedDays));
       return true;
     }
-  } catch(e) { console.error('Error:', e); }
+  } catch(e) {
+    console.error('Error:', e);
+  }
+
   blockedDays = new Set();
   return false;
 }
@@ -409,6 +425,9 @@ function renderCalendar() {
     }
     grid.appendChild(el);
   }
+  if (blockedDays.has(ds)) {
+  console.log('🚫 MATCH FOUND:', ds);
+}
 }
 
 function changeMonth(dir) {
@@ -497,15 +516,22 @@ document.querySelectorAll('.service-card').forEach(card => {
 (async function autoStart() {
   console.log('🚀 Auto-starting...');
   let attempts = 0;
+
   while (!window._db && attempts < 30) {
     await new Promise(r => setTimeout(r, 200));
     attempts++;
   }
-  
+
   if (window._db) {
-    await loadBlockedDays();  // This loads blockedDays
-    renderCalendar();         // This renders with blockedDays
+    await loadBlockedDays();
+
+    // 🔥 FORCE CLEAN RENDER
+    state.selectedDate = null;
+    state.selectedTime = null;
+
+    renderCalendar();
     renderTimeSlots();
+
     console.log('✅ Calendar ready with', blockedDays.size, 'blocked days');
   } else {
     renderCalendar();
