@@ -403,16 +403,24 @@ async function loadBlockedDays() {
     const snap = await window._getDoc(
       window._doc(window._db, 'settings', 'availability')
     );
-    // Update the GLOBAL blockedDays variable
-    blockedDays = snap.exists() ? new Set(snap.data().offDays || []) : new Set();
+    
+    // IMPORTANT: Use window.blockedDays to make it truly global
+    window.blockedDays = snap.exists() ? new Set(snap.data().offDays || []) : new Set();
+    // Also update the local reference
+    blockedDays = window.blockedDays;
+    
     console.log('✅ Loaded blocked days:', Array.from(blockedDays));
+    console.log('Blocked days size:', blockedDays.size);
+    
+    // Force redraw
+    renderCalendar();
+    renderTimeSlots();
   } catch(e) {
     console.error('loadBlockedDays:', e);
-    blockedDays = new Set();
+    window.blockedDays = new Set();
+    blockedDays = window.blockedDays;
   }
-  renderCalendar(); // Now renderCalendar sees the updated blockedDays
 }
-
 /* ═══════════════════════════════════════════════════
    SERVICE CARDS
 ═══════════════════════════════════════════════════ */
@@ -462,6 +470,10 @@ function renderCalendar() {
   const grid = document.getElementById('calGrid');
   if (!grid) return;
   
+  // Use window.blockedDays
+  const currentBlocked = window.blockedDays || new Set();
+  console.log('Rendering with blocked days:', Array.from(currentBlocked));
+  
   document.getElementById('calMonthLabel').textContent = `${MONTHS[state.calMonth]} ${state.calYear}`;
   const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
   grid.innerHTML = '';
@@ -485,13 +497,16 @@ function renderCalendar() {
     const thisDate = new Date(state.calYear, state.calMonth, d);
     const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    // THIS IS THE KEY - check blockedDays directly
     if (isPast) {
       el.classList.add('past');
-    } else if (blockedDays.has(ds)) {
-      el.classList.add('past', 'blocked');
-      el.title = 'Not available - blocked';
-      console.log(`Blocked: ${ds}`); // Debug - see if this logs
+    } else if (currentBlocked.has(ds)) {
+      console.log(`Blocking: ${ds}`);
+      el.classList.add('blocked');
+      el.classList.add('past');
+      el.style.textDecoration = 'line-through';
+      el.style.opacity = '0.3';
+      el.style.cursor = 'not-allowed';
+      el.title = 'Not available';
     } else {
       if (d === today.getDate() && state.calMonth === today.getMonth() && state.calYear === today.getFullYear()) {
         el.classList.add('today');
@@ -509,7 +524,6 @@ function renderCalendar() {
     grid.appendChild(el);
   }
 }
-
 function changeMonth(dir) {
   state.calMonth += dir;
   if (state.calMonth > 11) { state.calMonth=0; state.calYear++; }
